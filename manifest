@@ -1,0 +1,14 @@
+appname=frigate
+version=0.16.2
+display_name=Frigate
+desc=Frigate是一个开源的家庭监控NVR，专为Home Assistant设计，具备 AI 目标/物体检测功能。使用 OpenCV 和 TensorFlow 在本地为 IP 摄像头执行实时物体检测。
+arch=x86_64
+source=thirdparty
+maintainer=Frigate LLC
+maintainer_url=https://frigate.video
+distributor=Frigate 中文社区
+distributor_url=https://docs.frigate-cn.video
+desktop_uidir=ui
+desktop_applaunchname=frigate.application
+service_port=8971
+os_min_version=0.9.0

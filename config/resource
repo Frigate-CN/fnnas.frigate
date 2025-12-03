@@ -1,0 +1,38 @@
+{
+    "docker-project":
+    {
+        "projects":
+        [
+            {
+                "name": "Frigate",
+                "path": "docker"
+            }
+        ]
+    },
+    "data-share":
+    {
+        "shares":
+        [
+            {
+                "name": "Frigate",
+                "permission":
+                {
+                    "rw":
+                    [
+                        "docker-Frigate"
+                    ]
+                }
+            },
+            {
+                "name": "Frigate/data",
+                "permission":
+                {
+                    "rw":
+                    [
+                        "docker-Frigate"
+                    ]
+                }
+            }
+        ]
+    }
+}

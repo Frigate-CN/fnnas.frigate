@@ -1,0 +1,131 @@
+[
+  {
+    "stepTitle": "欢迎安装 Frigate",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "感谢你使用 Frigate"
+      },
+      {
+        "type": "tips",
+        "helpText": "请阅读 <a target=\"_blank\" href=\"https://example.com/privacy\">隐私政策</a> 和 <a target=\"_blank\" href=\"https://example.com/terms\">服务条款</a>。"
+      },
+      {
+        "type": "switch",
+        "field": "wizard_agree_terms",
+        "label": "我已阅读并同意服务条款",
+        "rules": [
+          {
+            "required": true,
+            "message": "请同意服务条款"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stepTitle": "请选择安装版本",
+    "items": [
+      {
+        "type": "select",
+        "field": "wizard_version",
+        "label": "版本",
+        "initValue": "stable",
+        "options": [
+          {
+            "label": "默认",
+            "value": "stable"
+          },
+          {
+            "label": "NVIDIA GPU",
+            "value": "stable-tensorrt"
+          },
+          {
+            "label": "AMD GPU",
+            "value": "stable-rocm"
+          }
+        ],
+        "rules": [
+          {
+            "required": true,
+            "message": "请选择使用的版本"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "Frigate 支持多种硬件加速的方式。<br>如果你使用的是Intel核显，请使用默认镜像。该镜像同时还支持 Coral 与 Hailo8 加速卡<br>如果你使用的是NVIDIA的GPU，请选择<strong>NVIDIA GPU</strong>。<br>如果你是AMD的核显或独显，请选择<strong>AMD GPU</strong>"
+      }
+    ]
+  },
+  {
+    "stepTitle": "硬件加速",
+    "items": [
+      {
+        "type": "select",
+        "field": "wizard_coral",
+        "label": "是否使用Coral加速卡？",
+        "initValue": "",
+        "options": [
+          {
+            "label": "无",
+            "value": ""
+          },
+          {
+            "label": "USB Coral",
+            "value": "- /dev/bus/usb:/dev/bus/usb"
+          },
+          {
+            "label": "M.2 Coral（需自行安装驱动）",
+            "value": "- /dev/apex_0:/dev/apex_0"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "Coral 为一个边缘计算加速模块，有USB和M.2两个版本。其中M.2版本性价比最高，但需要额外安装驱动。<br>注：一般情况下不需要该加速模块，即使是Intel核显，也能够很好的完成编解码加速与AI识别。"
+      }
+    ]
+  },
+  {
+    "stepTitle": "功能配置",
+    "items": [
+      {
+        "type": "select",
+        "field": "wizard_endpoint",
+        "label": "开启国内模型下载加速",
+        "initValue": "HF_ENDPOINT: \"https://huggingface.mirror.frigate-cn.video\"\r\nGITHUB_ENDPOINT: \"https://github.mirror.frigate-cn.video\"",
+        "options": [
+          {
+            "label": "是",
+            "value": "HF_ENDPOINT: \"https://huggingface.mirror.frigate-cn.video\"\r\nGITHUB_ENDPOINT: \"https://github.mirror.frigate-cn.video\""
+          },
+          {
+            "label": "否",
+            "value": ""
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "将使用 <strong>Frigate 中文文档</strong> 与 <a href='https://cnb.cool'>cnb.cool</a> 提供的镜像加速内置的模型下载"
+      },
+      {
+        "type": "text",
+        "field": "wizard_shm_size",
+        "label": "共享内存大小（shm）",
+        "initValue": "512mb",
+        "rules": [
+          {
+              "required": true,
+              "message": "请输入共享内存大小，注意带单位，如mb"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "Frigate使用共享内存(shm)处理视频帧。如果该内存设置过小，将在使用多个高清摄像头的时候出现\"Bus error\"报错。更多详细信息请<a href=\"https://docs.frigate-cn.video/frigate/installation#calculating-required-shm-size\">点击参阅文档</a>"
+      }
+    ]
+  }
+]

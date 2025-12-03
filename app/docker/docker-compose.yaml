@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  frigate:
+    container_name: frigate
+    privileged: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    image: docker.cnb.cool/frigate-cn/frigate:${wizard_version}
+    shm_size: ${wizard_shm_size}
+    devices:
+      ${wizard_coral}
+      - /dev/dri/:/dev/dri/
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${TRIM_PKGETC}/frigate:/config
+      - ${TRIM_APPDEST_VOL}/frigate/video:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "${TRIM_SERVICE_PORT}:8971"
+      # - "5000:5000" # 用于内部无鉴权验证的访问。谨慎暴露。 
+      - "8554:8554" # RTSP视频流
+      - "8555:8555/tcp" # 基于TCP的WebRTC
+      - "8555:8555/udp" # 基于UDP的WebRTC
+    environment:
+      FRIGATE_RTSP_PASSWORD: "password"
+      TZ: "Asia/Shanghai"
+      ${wizard_endpoint}
+      

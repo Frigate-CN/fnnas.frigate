@@ -1,0 +1,13 @@
+{
+    ".url": {
+        "frigate.application": {
+            "title": "Frigate",
+            "icon": "images/icon_{0}.png",
+            "type": "url",
+            "protocol": "https",
+            "port": "{port}",
+            "url": "/",
+            "allUsers": true
+        }
+    }
+}
