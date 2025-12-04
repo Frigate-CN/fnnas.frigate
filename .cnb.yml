@@ -22,5 +22,10 @@ master:
         - name: upload 
           type: git:release
           options:
-            tag: stable
-            description: description
+            tag: release
+            description: 飞牛专用插件
+        - name: release 上传附件
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - frigate.fpk
