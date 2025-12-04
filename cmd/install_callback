@@ -25,6 +25,9 @@ cat <<EOF > "${CONFIG_PATH}"
 
 # 有任何配置文件的疑问，请优先阅读我们的文档，文档顶部有搜索框，善用搜索
 
+mqtt:
+  enabled: false
+
 auth:
   reset_admin_password: true #如果忘记密码，可以通过该选项重置密码，并打印在日志中
   
