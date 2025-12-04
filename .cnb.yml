@@ -1,0 +1,28 @@
+master:
+  push:
+    - imports:
+      - https://cnb.cool/frigate-cn/github-key/-/blob/87d2daf01d7346e48f6d45986c579f82e28a4d57/github-token.yml
+      stages:
+        - name: sync to github
+          image: tencentcom/git-sync
+          settings:
+            target_url: https://github.com/Frigate-CN/fnnas.frigate.git
+            auth_type: https
+            username: ${github_username}
+            password: ${github_access_token}
+        - name: install fnpack
+          stages:
+            - name: download fnpack cli
+              script: curl -O https://static2.fnnas.com/fnpack/fnpack-1.0.4-linux-amd64
+            - name: copy to usr
+              script: |
+                chmod +x fnpack-1.0.0-linux-amd64
+                sudo mv fnpack-1.0.0-linux-amd64 /usr/local/bin/fnpack
+            - name: build fnpack
+              script:
+                fnpack build
+            - name: upload 
+              type: git:release
+              options:
+                tag: stable
+                description: description
