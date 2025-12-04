@@ -3,7 +3,7 @@
 ### This script is called after the user installs the application.
 
 # 设置基础目录变量
-CONFIG_PATH="${TRIM_PKGHOME}/config.yml"
+CONFIG_PATH="${TRIM_DATA_SHARE_PATHS}/config/config.yaml"
 
 # 检查配置文件是否存在
 if [ -f "$CONFIG_PATH" ]; then
@@ -12,7 +12,7 @@ if [ -f "$CONFIG_PATH" ]; then
 fi
 
 # 创建目录（如果不存在）
-mkdir -p "${TRIM_PKGHOME}"
+mkdir -p "${TRIM_DATA_SHARE_PATHS}"
 
 # 基础配置内容
 cat <<EOF > "${CONFIG_PATH}"
