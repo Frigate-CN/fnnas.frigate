@@ -41,8 +41,9 @@ master:
                 exit 1
               fi
 
-              # 设置环境变量（后续阶段通过$RELEASE_TAG引用）
-              echo "##vso[task.setvariable variable=RELEASE_TAG]$TAG_NAME"
+              echo "##[set-output TAG=$TAG_NAME]"
+          exports:
+            TAG: RELEASE_TAG
         - name: create release
           type: git:release
           options:
