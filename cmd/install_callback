@@ -102,7 +102,8 @@ cameras:
 EOF
 
 # 根据 WIZARD_VERSION 和 WIZARD_CORAL 添加额外的配置
-if [ "$WIZARD_VERSION" == "stable" ]; then
+
+if [[ "$WIZARD_VERSION" != *-tensorrt* ]] && [[ "$WIZARD_VERSION" != *-rocm* ]]; then
   if [ -z "$WIZARD_CORAL" ] || [ -z "$(echo $WIZARD_CORAL | tr -d ' ')" ]; then
     cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
@@ -169,7 +170,7 @@ model:
   labelmap_path: /openvino-model/coco_91cl_bkgr.txt
 EOF
   fi
-elif [ "$WIZARD_VERSION" == "stable-tensorrt" ]; then
+elif [[ "$WIZARD_VERSION" == *-tensorrt* ]]; then
   cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
 # 警告，你需要阅读以下文档进行操作，否则可能无法正常使用NVIDIA GPU进行加速：
@@ -187,7 +188,7 @@ ffmpeg:
 #  onnx_0:
 #    type: onnx
 EOF
-elif [ "$WIZARD_VERSION" == "stable-rocm" ]; then
+elif [[ "$WIZARD_VERSION" == *-rocm* ]]; then
   cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
 # 注意，你可能需要参考文档，添加额外的环境变量 LIBVA_DRIVER_NAME=radeonsi 后才能正常使用AMD进行视频硬件加速
