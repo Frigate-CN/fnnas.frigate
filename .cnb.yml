@@ -2,7 +2,6 @@ master:
   push:
     - imports:
       - https://cnb.cool/frigate-cn/github-key/-/blob/87d2daf01d7346e48f6d45986c579f82e28a4d57/github-token.yml
-      - https://api.cnb.cool/frigate-cn/frigate/-/releases/latest
       stages:
         - name: sync to github
           image: tencentcom/git-sync
@@ -20,15 +19,44 @@ master:
         - name: build fnpack
           script:
             fnpack build
+        - name: 获取tag并设置环境变量
+          image: curlimages/curl:latest  # 使用curl工具镜像
+          script:
+            - |
+              GITHUB_OWNER="blakeblackshear"
+              GITHUB_REPO="frigate"
+              GITHUB_TOKEN=$github_access_token
+
+              # 调用release/latest接口并保存响应
+              RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/latest")
+
+              # 验证接口返回状态（非200则报错）
+              if [ "$(echo "$RESPONSE" | jq -r '.message')" != "OK" ]; then
+                echo "获取release失败，响应：$RESPONSE"
+                exit 1
+              fi
+
+              # 提取tag_name（注意：release对象的tag_name字段直接存储版本号，如v0.16.2）
+              TAG_NAME=$(echo "$RESPONSE" | jq -r '.tag_name')
+
+              # 验证tag_name是否存在（避免空值）
+              if [ -z "$TAG_NAME" ]; then
+                echo "release中未找到tag_name字段"
+                exit 1
+              fi
+
+              # 设置环境变量（后续阶段通过$RELEASE_TAG引用）
+              echo "##vso[task.setvariable variable=RELEASE_TAG]$TAG_NAME"
         - name: create release
           type: git:release
           options:
-            tag: $tag_name
+            tag: $RELEASE_TAG
             description: 飞牛专用插件
         - name: release 上传附件
           image: cnbcool/attachments:latest
           settings:
             type: UPLOAD
-            tag: $tag_name
+            tag: $RELEASE_TAG
             attachments:
               - frigate.fpk
