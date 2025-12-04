@@ -20,10 +20,9 @@ master:
           script:
             fnpack build
         - name: 获取tag并设置环境变量
-          image: curlimages/curl:latest  # 使用curl工具镜像
+          image: alpine/jq:latest
           script:
             - |
-              apt-get update && apt-get install -y jq
               GITHUB_OWNER="blakeblackshear"
               GITHUB_REPO="frigate"
               GITHUB_TOKEN=$github_access_token
