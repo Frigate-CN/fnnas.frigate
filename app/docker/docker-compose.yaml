@@ -12,8 +12,8 @@ services:
       - /dev/dri/:/dev/dri/${wizard_coral}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${TRIM_APPDEST_VOL}/frigate:/config
-      - ${TRIM_APPDEST_VOL}/frigate/video:/media/frigate
+      - ${TRIM_PKGETC}:/config
+      - ${TRIM_PKGHOME}/frigate/video:/media/frigate
       - type: tmpfs
         target: /tmp/cache
         tmpfs:

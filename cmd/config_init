@@ -5,7 +5,7 @@
 #!/bin/bash
 
 # 设置基础目录变量
-CONFIG_PATH="${TRIM_APPDEST_VOL}/frigate/config.yaml"
+CONFIG_PATH="${TRIM_PKGETC}/config.yaml"
 
 # 检查配置文件是否存在
 if [ -f "$CONFIG_PATH" ]; then
@@ -14,7 +14,7 @@ if [ -f "$CONFIG_PATH" ]; then
 fi
 
 # 创建目录（如果不存在）
-mkdir -p "${TRIM_PKGETC}/frigate"
+mkdir -p "${TRIM_PKGETC}"
 
 # 基础配置内容
 cat <<EOF > "${CONFIG_PATH}"
