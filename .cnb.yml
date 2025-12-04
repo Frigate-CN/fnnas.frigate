@@ -15,7 +15,7 @@ master:
         - name: copy to usr
           script: |
             chmod +x fnpack-1.0.4-linux-amd64
-            sudo mv fnpack-1.0.4-linux-amd64 /usr/local/bin/fnpack
+            mv fnpack-1.0.4-linux-amd64 /usr/local/bin/fnpack
         - name: build fnpack
           script:
             fnpack build
