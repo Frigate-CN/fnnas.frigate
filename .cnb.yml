@@ -10,14 +10,11 @@ master:
             auth_type: https
             username: ${github_username}
             password: ${github_access_token}
-        - name: download fnpack cli
-          script: curl -O https://static2.fnnas.com/fnpack/fnpack-1.0.4-linux-amd64
-        - name: copy to usr
+        - name: build fnpack
           script: |
+            curl -O https://static2.fnnas.com/fnpack/fnpack-1.0.4-linux-amd64
             chmod +x fnpack-1.0.0-linux-amd64
             sudo mv fnpack-1.0.0-linux-amd64 /usr/local/bin/fnpack
-        - name: build fnpack
-          script:
             fnpack build
         - name: upload 
           type: git:release
