@@ -23,6 +23,7 @@ master:
           image: curlimages/curl:latest  # 使用curl工具镜像
           script:
             - |
+              apt-get update && apt-get install -y jq
               GITHUB_OWNER="blakeblackshear"
               GITHUB_REPO="frigate"
               GITHUB_TOKEN=$github_access_token
