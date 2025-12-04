@@ -3,6 +3,6 @@
     {
         "run-as": "package"
     },
-    "username": "docker-Frigate",
-    "groupname": "docker-Frigate"
+    "username": "docker-frigate",
+    "groupname": "docker-frigate"
 }

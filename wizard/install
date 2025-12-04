@@ -8,18 +8,7 @@
       },
       {
         "type": "tips",
-        "helpText": "请阅读 <a target=\"_blank\" href=\"https://example.com/privacy\">隐私政策</a> 和 <a target=\"_blank\" href=\"https://example.com/terms\">服务条款</a>。"
-      },
-      {
-        "type": "switch",
-        "field": "wizard_agree_terms",
-        "label": "我已阅读并同意服务条款",
-        "rules": [
-          {
-            "required": true,
-            "message": "请同意服务条款"
-          }
-        ]
+        "helpText": "Frigate 是一个完整的本地网络视频录像机（NVR），专为Home Assistant设计，具备 AI 目标/物体检测功能。使用 OpenCV 和 TensorFlow 在本地为 IP 摄像头执行实时物体检测。<br>目前该项目还处于预发布版本，还不是正式产品（1.0），请多参考我们的<a href=\"https://docs.frigate-cn.video/\">中文文档</a>进行使用。<br><br>欢迎关注我们的社交媒体：<br><a href=\"https://space.bilibili.com/3546894915602564\" target=\"_blank\">bilibili</a><br><a href=\"https://qm.qq.com/q/uikrC4l46A\" target=\"_blank\">QQ交流群</a>"
       }
     ]
   },
@@ -30,19 +19,19 @@
         "type": "select",
         "field": "wizard_version",
         "label": "版本",
-        "initValue": "stable",
+        "initValue": "0.16.2",
         "options": [
           {
             "label": "默认",
-            "value": "stable"
+            "value": "0.16.2"
           },
           {
             "label": "NVIDIA GPU",
-            "value": "stable-tensorrt"
+            "value": "0.16.2-tensorrt"
           },
           {
             "label": "AMD GPU",
-            "value": "stable-rocm"
+            "value": "0.16.2-rocm"
           }
         ],
         "rules": [
@@ -65,19 +54,19 @@
         "type": "select",
         "field": "wizard_coral",
         "label": "是否使用Coral加速卡？",
-        "initValue": "",
+        "initValue": "\n      ",
         "options": [
           {
             "label": "无",
-            "value": ""
+            "value": "\n      "
           },
           {
             "label": "USB Coral",
-            "value": "- /dev/bus/usb:/dev/bus/usb"
+            "value": "\n      - /dev/bus/usb:/dev/bus/usb\n"
           },
           {
             "label": "M.2 Coral（需自行安装驱动）",
-            "value": "- /dev/apex_0:/dev/apex_0"
+            "value": "\n      - /dev/apex_0:/dev/apex_0\n"
           }
         ]
       },
@@ -93,22 +82,38 @@
       {
         "type": "select",
         "field": "wizard_endpoint",
-        "label": "开启国内模型下载加速",
-        "initValue": "HF_ENDPOINT: \"https://huggingface.mirror.frigate-cn.video\"\r\nGITHUB_ENDPOINT: \"https://github.mirror.frigate-cn.video\"",
+        "label": "开启 Huggingface 模型国内下载加速",
+        "initValue": "https://huggingface.mirror.frigate-cn.video",
         "options": [
           {
             "label": "是",
-            "value": "HF_ENDPOINT: \"https://huggingface.mirror.frigate-cn.video\"\r\nGITHUB_ENDPOINT: \"https://github.mirror.frigate-cn.video\""
+            "value": "https://huggingface.mirror.frigate-cn.video"
           },
           {
             "label": "否",
-            "value": ""
+            "value": " "
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "field": "wizard_github_endpoint",
+        "label": "开启 Github 模型国内下载加速",
+        "initValue": "https://github.mirror.frigate-cn.video",
+        "options": [
+          {
+            "label": "是",
+            "value": "https://github.mirror.frigate-cn.video"
+          },
+          {
+            "label": "否",
+            "value": " "
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "将使用 <strong>Frigate 中文文档</strong> 与 <a href='https://cnb.cool'>cnb.cool</a> 提供的镜像加速内置的模型下载"
+        "helpText": "将使用 <strong>Frigate 中文文档</strong> 与 <a href='https://cnb.cool' target=\"_blank\">cnb.cool</a> 提供的镜像加速内置的模型下载"
       },
       {
         "type": "text",
@@ -124,7 +129,27 @@
       },
       {
         "type": "tips",
-        "helpText": "Frigate使用共享内存(shm)处理视频帧。如果该内存设置过小，将在使用多个高清摄像头的时候出现\"Bus error\"报错。更多详细信息请<a href=\"https://docs.frigate-cn.video/frigate/installation#calculating-required-shm-size\">点击参阅文档</a>"
+        "helpText": "Frigate 使用共享内存(shm)处理视频帧。如果该内存设置过小，将在使用多个高清摄像头的时候出现\"Bus error\"报错。更多详细信息请<a href=\"https://docs.frigate-cn.video/frigate/installation#calculating-required-shm-size\" target=\"_blank\">点击参阅文档</a>"
+      }
+    ]
+  },
+  {
+    "stepTitle": "最后的重要提醒",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "<h1>警告！</h1><br>注意，首次创建时，密码将输出在 Docker 的日志文件中，请安装完成后立刻打开 Docker 应用，在Frigate容器的日志中寻找密码。<br>更多找回密码的方法请<a href=\"https://docs.frigate-cn.video/configuration/authentication#resetting-admin-password\" target=\"_blank\">参阅文档"
+      },
+      {
+        "type": "switch",
+        "field": "wizard_agree_terms",
+        "label": "我已了解该问题",
+        "rules": [
+            {
+                "required": true,
+                "message": "请阅读以上警告信息，否则无法正常使用"
+            }
+        ]
       }
     ]
   }

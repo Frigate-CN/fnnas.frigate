@@ -1,5 +1,5 @@
 #!/bin/bash
-LOG_FILE="${TRIM_PKGVAR}/info.log"
+
 FILE_PATH="${TRIM_APPDEST}/docker/docker-compose.yaml"
 
 is_docker_running () {

@@ -4,7 +4,7 @@
         "projects":
         [
             {
-                "name": "Frigate",
+                "name": "frigate",
                 "path": "docker"
             }
         ]
@@ -14,22 +14,22 @@
         "shares":
         [
             {
-                "name": "Frigate",
+                "name": "frigate",
                 "permission":
                 {
                     "rw":
                     [
-                        "docker-Frigate"
+                        "docker-frigate"
                     ]
                 }
             },
             {
-                "name": "Frigate/data",
+                "name": "frigate/data",
                 "permission":
                 {
                     "rw":
                     [
-                        "docker-Frigate"
+                        "docker-frigate"
                     ]
                 }
             }
