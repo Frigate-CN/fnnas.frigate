@@ -1,5 +1,5 @@
 appname=frigate
-version=0.16.2
+version=0.16.3
 display_name=Frigate
 desc=Frigate是一个开源的家庭监控NVR，专为Home Assistant设计，具备 AI 目标/物体检测功能。使用 OpenCV 和 TensorFlow 在本地为 IP 摄像头执行实时物体检测。<br>注意！首次创建时，密码将输出在Docker的日志文件中，请安装完成后立刻打开Docker应用，<strong>在Frigate容器的日志中寻找密码</strong>。
 arch=x86_64
