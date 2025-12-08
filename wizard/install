@@ -19,19 +19,19 @@
         "type": "select",
         "field": "wizard_version",
         "label": "版本",
-        "initValue": "0.16.2",
+        "initValue": "0.16.3",
         "options": [
           {
             "label": "默认",
-            "value": "0.16.2"
+            "value": "0.16.3"
           },
           {
             "label": "NVIDIA GPU",
-            "value": "0.16.2-tensorrt"
+            "value": "0.16.3-tensorrt"
           },
           {
             "label": "AMD GPU",
-            "value": "0.16.2-rocm"
+            "value": "0.16.3-rocm"
           }
         ],
         "rules": [
