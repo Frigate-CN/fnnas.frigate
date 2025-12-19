@@ -29,7 +29,7 @@ mqtt:
   enabled: false
 
 auth:
-  reset_admin_password: true #如果忘记密码，可以通过该选项重置密码，并打印在日志中
+  reset_admin_password: false #如果忘记密码，可以通过该选项重置密码，并打印在日志中
   
 # 检测的目标/物体
 objects:
