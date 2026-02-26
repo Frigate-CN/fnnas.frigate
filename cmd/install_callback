@@ -101,76 +101,9 @@ cameras:
 
 EOF
 
-# 根据 WIZARD_VERSION 和 WIZARD_CORAL 添加额外的配置
+# 根据 wizard_version 和 wizard_coral 添加额外的配置
 
-if [[ "${WIZARD_VERSION}" != "-tensorrt" ]] && [[ "${WIZARD_VERSION}" != "-rocm" ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
-  if [ -z "${WIZARD_CORAL}" ] || [ -z "$(echo ${WIZARD_CORAL} | tr -d ' ')" ]; then
-    cat <<EOF >> "${CONFIG_PATH}"
-# 视频编码加速
-ffmpeg:
-  hwaccel_args: preset-vaapi # 如果你的设备支持qsv，可以考虑更换为preset-intel-qsv-h265（注意，最后的h265根据摄像头实际编码情况调整）
-
-# 检测器
-detectors:
-  ov:
-    type: openvino # Intel 专用的检测器加速方案
-    device: GPU
-
-# 模型参数
-model:
-  width: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
-  height: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
-  input_tensor: nhwc
-  input_pixel_format: bgr
-  path: /openvino-model/ssdlite_mobilenet_v2.xml
-  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
-EOF
-  elif [[ "${WIZARD_CORAL}" == */dev/bus/usb:/dev/bus/usb* ]]; then
-    cat <<EOF >> "${CONFIG_PATH}"
-# 视频编码加速
-ffmpeg:
-  hwaccel_args: preset-vaapi # 如果你的设备支持qsv，可以考虑更换为preset-intel-qsv-h265（注意，最后的h265根据摄像头实际编码情况调整）
-
-# 检测器
-detectors:
-  # USB Coral加速卡
-  coral:
-    type: edgetpu
-    device: usb
-
-# 模型参数
-model:
-  width: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
-  height: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
-  input_tensor: nhwc
-  input_pixel_format: bgr
-  path: /openvino-model/ssdlite_mobilenet_v2.xml
-  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
-EOF
-  elif [[ "${WIZARD_CORAL}" == */dev/apex_0:/dev/apex_0* ]]; then
-    cat <<EOF >> "${CONFIG_PATH}"
-# 视频编码加速
-ffmpeg:
-  hwaccel_args: preset-vaapi # 如果你的设备支持qsv，可以考虑更换为preset-intel-qsv-h265（注意，最后的h265根据摄像头实际编码情况调整）
-
-# 检测器
-detectors:
-  # coral M.2加速卡
-  coral:
-    type: edgetpu
-    device: pci
-
-# 模型参数
-model:
-  width: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
-  height: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
-  input_tensor: nhwc
-  input_pixel_format: bgr
-  path: /openvino-model/ssdlite_mobilenet_v2.xml
-  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
-EOF
-  fi
-elif [[ "${WIZARD_VERSION}" == "-tensorrt" ]] && command -v nvidia-smi >/dev/null 2>&1; then
+if [[ "${wizard_version}" == "-tensorrt" ]] && nvidia-smi --query-gpu=driver_version --format=csv,noheader >/dev/null 2>&1; then
   cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
 # 警告，你需要阅读以下文档进行操作，否则可能无法正常使用NVIDIA GPU进行加速：
@@ -188,12 +121,12 @@ ffmpeg:
 #  onnx_0:
 #    type: onnx
 EOF
-elif [[ "${WIZARD_VERSION}" == "-rocm" ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
+elif [[ "${wizard_version}" == "-rocm" ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
   cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
 # 注意，你可能需要参考文档，添加额外的环境变量 LIBVA_DRIVER_NAME=radeonsi 后才能正常使用AMD进行视频硬件加速
 # https://docs.frigate-cn.video/configuration/hardware_acceleration_video#amdati-gpus-radeon-hd-2000-and-newer-gpus-via-libva-mesa-driver
-ffmpeg: 
+ffmpeg:
   hwaccel_args: preset-vaapi
 
 # 检测器
@@ -206,8 +139,7 @@ ffmpeg:
 #  onnx_0:
 #    type: onnx
 EOF
-
-elif [[ "${WIZARD_VERSION}" == "-rockchip" ]]; then
+elif [[ "${wizard_version}" == "-rockchip" ]]; then
   cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
 ffmpeg:
@@ -238,6 +170,74 @@ model:
   labelmap_path: /labelmap/coco-80.txt
 
 EOF
+elif [[ "${wizard_version}" != "-tensorrt" ]] && [[ "${wizard_version}" != "-rocm" ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
+  if [ -z "${wizard_coral}" ] || [ -z "$(echo ${wizard_coral} | tr -d ' ')" ]; then
+    cat <<EOF >> "${CONFIG_PATH}"
+# 视频编码加速
+ffmpeg:
+  hwaccel_args: preset-vaapi # 如果你的设备支持qsv，可以考虑更换为preset-intel-qsv-h265（注意，最后的h265根据摄像头实际编码情况调整）
+
+# 检测器
+detectors:
+  ov:
+    type: openvino # Intel 专用的检测器加速方案
+    device: GPU
+
+# 模型参数
+model:
+  width: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  height: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+EOF
+  elif [[ "${wizard_coral}" == */dev/bus/usb:/dev/bus/usb* ]]; then
+    cat <<EOF >> "${CONFIG_PATH}"
+# 视频编码加速
+ffmpeg:
+  hwaccel_args: preset-vaapi # 如果你的设备支持qsv，可以考虑更换为preset-intel-qsv-h265（注意，最后的h265根据摄像头实际编码情况调整）
+
+# 检测器
+detectors:
+  # USB Coral加速卡
+  coral:
+    type: edgetpu
+    device: usb
+
+# 模型参数
+model:
+  width: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  height: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+EOF
+  elif [[ "${wizard_coral}" == */dev/apex_0:/dev/apex_0* ]]; then
+    cat <<EOF >> "${CONFIG_PATH}"
+# 视频编码加速
+ffmpeg:
+  hwaccel_args: preset-vaapi # 如果你的设备支持qsv，可以考虑更换为preset-intel-qsv-h265（注意，最后的h265根据摄像头实际编码情况调整）
+
+# 检测器
+detectors:
+  # coral M.2加速卡
+  coral:
+    type: edgetpu
+    device: pci
+
+# 模型参数
+model:
+  width: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  height: 300 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+EOF
+  fi
+
 fi
 echo "配置文件已生成在 ${CONFIG_PATH}"
 
