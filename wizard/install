@@ -19,31 +19,35 @@
         "type": "select",
         "field": "wizard_version",
         "label": "版本",
-        "initValue": "0.16.3",
+        "initValue": "",
         "options": [
           {
             "label": "默认",
-            "value": "0.16.3"
+            "value": ""
           },
           {
             "label": "NVIDIA GPU",
-            "value": "0.16.3-tensorrt"
+            "value": "-tensorrt"
           },
           {
             "label": "AMD GPU",
-            "value": "0.16.3-rocm"
+            "value": "-rocm"
+          },
+          {
+            "label": "Rockchip",
+            "value": "-rk"
           }
         ],
         "rules": [
           {
-            "required": true,
+            "required": false,
             "message": "请选择使用的版本"
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "Frigate 支持多种硬件加速的方式。<br>如果你使用的是Intel核显，请使用默认镜像。该镜像同时还支持 Coral 与 Hailo8 加速卡<br>如果你使用的是NVIDIA的GPU，请选择<strong>NVIDIA GPU</strong>。<br>如果你是AMD的核显或独显，请选择<strong>AMD GPU</strong>"
+        "helpText": "Frigate 支持多种硬件加速的方式。<br>如果你使用的是 Intel 核显/独显，请使用默认镜像。该镜像同时还支持 Coral 与 Hailo8 加速卡<br>如果你使用的是 NVIDIA 的 GPU，请选择 <strong>NVIDIA GPU</strong><br>如果你是 AMD 的核显或独显，请选择 <strong>AMD GPU</strong><br>如果你使用的是 Rockchip 芯片，请选择 <strong>Rockchip</strong><br><br>注意，NVIDIA 还需要在应用商店先安装 <strong>NVIDIA Container Toolkit</strong> 才能正常使用；<br>AMD 不支持老版本的核显硬件加速。"
       }
     ]
   },
@@ -122,8 +126,8 @@
         "initValue": "512mb",
         "rules": [
           {
-              "required": true,
-              "message": "请输入共享内存大小，注意带单位，如mb"
+            "required": true,
+            "message": "请输入共享内存大小，注意带单位，如mb"
           }
         ]
       },
@@ -145,10 +149,10 @@
         "field": "wizard_agree_terms",
         "label": "我已了解该问题",
         "rules": [
-            {
-                "required": true,
-                "message": "请阅读以上警告信息，否则无法正常使用"
-            }
+          {
+            "required": true,
+            "message": "请阅读以上警告信息，否则无法正常使用"
+          }
         ]
       }
     ]

@@ -3,10 +3,13 @@ version: "3.8"
 services:
   frigate:
     container_name: frigate
+    extends:
+      file: extends${wizard_version}.yaml
+      service: frigate
     privileged: true
     restart: unless-stopped
     stop_grace_period: 30s
-    image: docker.cnb.cool/frigate-cn/frigate:${wizard_version}
+    image: docker.cnb.cool/frigate-cn/frigate:0.16.4${wizard_version}
     shm_size: ${wizard_shm_size}
     devices:
       - /dev/dri/:/dev/dri/${wizard_coral}
@@ -24,7 +27,6 @@ services:
       - "8555:8555/tcp"
       - "8555:8555/udp"
     environment:
-      FRIGATE_RTSP_PASSWORD: "password"
       TZ: "Asia/Shanghai"
       HF_ENDPOINT: $wizard_endpoint
       GITHUB_ENDPOINT: $wizard_github_endpoint

@@ -103,7 +103,7 @@ EOF
 
 # 根据 WIZARD_VERSION 和 WIZARD_CORAL 添加额外的配置
 
-if [[ "${WIZARD_VERSION}" != *-tensorrt* ]] && [[ "${WIZARD_VERSION}" != *-rocm* ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
+if [[ "${WIZARD_VERSION}" != "-tensorrt" ]] && [[ "${WIZARD_VERSION}" != "-rocm" ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
   if [ -z "${WIZARD_CORAL}" ] || [ -z "$(echo ${WIZARD_CORAL} | tr -d ' ')" ]; then
     cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
@@ -170,7 +170,7 @@ model:
   labelmap_path: /openvino-model/coco_91cl_bkgr.txt
 EOF
   fi
-elif [[ "${WIZARD_VERSION}" == *-tensorrt* ]] && command -v nvidia-smi >/dev/null 2>&1; then
+elif [[ "${WIZARD_VERSION}" == "-tensorrt" ]] && command -v nvidia-smi >/dev/null 2>&1; then
   cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
 # 警告，你需要阅读以下文档进行操作，否则可能无法正常使用NVIDIA GPU进行加速：
@@ -188,7 +188,7 @@ ffmpeg:
 #  onnx_0:
 #    type: onnx
 EOF
-elif [[ "${WIZARD_VERSION}" == *-rocm* ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
+elif [[ "${WIZARD_VERSION}" == "-rocm" ]] && ls /dev/dri/renderD* >/dev/null 2>&1; then
   cat <<EOF >> "${CONFIG_PATH}"
 # 视频编码加速
 # 注意，你可能需要参考文档，添加额外的环境变量 LIBVA_DRIVER_NAME=radeonsi 后才能正常使用AMD进行视频硬件加速
@@ -206,8 +206,39 @@ ffmpeg:
 #  onnx_0:
 #    type: onnx
 EOF
-fi
 
+elif [[ "${WIZARD_VERSION}" == "-rockchip" ]]; then
+  cat <<EOF >> "${CONFIG_PATH}"
+# 视频编码加速
+ffmpeg:
+  hwaccel_args: preset-rkmpp
+  path: "7.0" # 如果出现编解码失败，可以尝试注释这一条
+
+# 检测器
+detectors:
+  rknn:
+    type: rknn
+    # 如果有多核NPU（如在rk3588上），可增加此值以提高性能，例如设置为3
+    num_cores: 0
+
+model:
+  # 模型名称（将自动下载）或自定义.rknn模型文件路径
+  # 可选值：
+  # - frigate-fp16-yolov9-t
+  # - frigate-fp16-yolov9-s
+  # - frigate-fp16-yolov9-m
+  # - frigate-fp16-yolov9-c
+  # - frigate-fp16-yolov9-e
+  # 或你的yolo_model.rknn容器内完整路径
+  path: frigate-fp16-yolov9-t
+  model_type: yolo-generic
+  width: 320 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  height: 320 # 此处为模型支持的大小，不是检测画面的大小，请勿随意修改
+  input_tensor: nhwc
+  labelmap_path: /labelmap/coco-80.txt
+
+EOF
+fi
 echo "配置文件已生成在 ${CONFIG_PATH}"
 
 exit 0

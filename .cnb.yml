@@ -1,7 +1,7 @@
 master:
   push:
     - imports:
-      - https://cnb.cool/frigate-cn/github-key/-/blob/87d2daf01d7346e48f6d45986c579f82e28a4d57/github-token.yml
+        - https://cnb.cool/frigate-cn/github-key/-/blob/87d2daf01d7346e48f6d45986c579f82e28a4d57/github-token.yml
       stages:
         - name: sync to github
           image: tencentcom/git-sync
@@ -11,14 +11,13 @@ master:
             username: ${github_username}
             password: ${github_access_token}
         - name: download fnpack cli
-          script: curl -O https://static2.fnnas.com/fnpack/fnpack-1.0.4-linux-amd64
+          script: curl -O https://static2.fnnas.com/fnpack/fnpack-1.2.1-linux-amd64
         - name: copy to usr
           script: |
-            chmod +x fnpack-1.0.4-linux-amd64
-            mv fnpack-1.0.4-linux-amd64 /usr/local/bin/fnpack
+            chmod +x fnpack-1.2.1-linux-amd64
+            mv fnpack-1.2.1-linux-amd64 /usr/local/bin/fnpack
         - name: build fnpack
-          script:
-            fnpack build
+          script: fnpack build
         - name: 获取tag并设置环境变量
           script:
             - |
