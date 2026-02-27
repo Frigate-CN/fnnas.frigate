@@ -9,7 +9,7 @@ services:
     privileged: true
     restart: unless-stopped
     stop_grace_period: 30s
-    image: docker.cnb.cool/frigate-cn/frigate:0.16.4${wizard_version}
+    image: docker.cnb.cool/frigate-cn/frigate:0.17.0${wizard_version}
     shm_size: ${wizard_shm_size}
     devices:
       - /dev/dri/:/dev/dri/${wizard_coral}

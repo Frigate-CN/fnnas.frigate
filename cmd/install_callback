@@ -79,25 +79,7 @@ snapshots:
 # 则需要额外设置go2rtc
 # 请参阅以下文档了解相关信息
 # https://docs.frigate-cn.video/configuration/live
-cameras:
-  back: # <- back为示例摄像头名称，改为你需要的名称，暂时只支持英文数字和下划线
-    enabled: True
-    ffmpeg: 
-      inputs: 
-      # 摄像头rtsp流地址可查阅摄像头文档或互联网其他人分享的教程，下面的地址仅为范例 
-        # 可以考虑使用go2rtc，请参考文档后面的说明
-        - path: rtsp://username:password@10.0.10.10:554/cam/realmonitor?channel=1&subtype=2
-          roles: 
-            - detect  # <- 用于目标/物体检测
-        # 可以设置不同的流用于不同功能，例如上面的流为子码流，节省带宽，适合检测，能够降低检测器负担
-        # 而下方的主码流画面清晰，适合录制
-        # 可以考虑使用go2rtc，请参考文档后面的说明
-        - path: rtsp://username:password@10.0.10.10:554/live
-          roles: 
-            - record  # <- 用于录像的视频流
-    detect: 
-      width: 1280 # <- 可选，默认Frigate会尝试自动检测分辨率
-      height: 720 # <- 可选，默认Frigate会尝试自动检测分辨率
+cameras: {}
 
 EOF
 
