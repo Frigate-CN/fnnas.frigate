@@ -1,0 +1,8 @@
+services:
+  frigate:
+    environment:
+      LIBVA_DRIVER_NAME: "radeonsi"
+    ports:
+      - "8554:8554"
+      - "8555:8555/tcp"
+      - "8555:8555/udp"

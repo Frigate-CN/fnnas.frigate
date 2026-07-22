@@ -1,5 +1,139 @@
 #!/bin/bash
 
-### This script is called after the user change environment variables in application setting page.
+### This script is called after the user changes environment variables in the app settings page.
+### 更新 .env、ui/config 和 Frigate config.yaml。
 
+ENV_FILE="${TRIM_APPDEST}/docker/.env"
+UI_CONFIG="${TRIM_APPDEST}/ui/config"
+FRIGATE_CONFIG="${TRIM_PKGETC}/config.yaml"
+
+AUTH_MODE="${wizard_auth:-gateway}"
+NETWORK_SUFFIX="${wizard_network_suffix:--bridge}"
+
+echo "============================================"
+echo "  飞牛 Frigate — 配置变更"
+echo "  网络: ${NETWORK_SUFFIX}"
+echo "  认证: ${AUTH_MODE}"
+echo "============================================"
+
+set_env() {
+  local key="$1" value="$2"
+  touch "${ENV_FILE}"
+  if grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
+    sed -i "s|^${key}=.*|${key}=${value}|" "${ENV_FILE}"
+  else
+    echo "${key}=${value}" >> "${ENV_FILE}"
+  fi
+}
+
+# =============================================
+# 1. 更新 .env（显式写入，避免 env 抓不到）
+# =============================================
+if [ "${AUTH_MODE}" = "gateway" ]; then
+  set_env wizard_base_path "/app/frigate"
+else
+  set_env wizard_base_path ""
+fi
+set_env TRIM_PKGETC "${TRIM_PKGETC}"
+set_env TRIM_PKGHOME "${TRIM_PKGHOME}"
+set_env TRIM_APPDEST "${TRIM_APPDEST}"
+set_env wizard_version "${wizard_version}"
+set_env wizard_network_suffix "${wizard_network_suffix}"
+set_env wizard_auth "${wizard_auth}"
+set_env wizard_coral "${wizard_coral}"
+set_env wizard_shm_size "${wizard_shm_size}"
+set_env wizard_endpoint "${wizard_endpoint}"
+set_env wizard_github_endpoint "${wizard_github_endpoint}"
+
+echo ".env 已更新"
+
+# =============================================
+# 2. 更新 ui/config
+# =============================================
+if [ -f "${UI_CONFIG}" ]; then
+  if [ "${AUTH_MODE}" = "native" ]; then
+    python3 -c "
+import json
+with open('${UI_CONFIG}', 'r') as f: config = json.load(f)
+app = config['.url']['frigate.application']
+app['protocol'] = 'https'
+app['port'] = '8971'
+app['url'] = '/'
+app.pop('gatewayPrefix', None)
+app.pop('gatewaySocket', None)
+with open('${UI_CONFIG}', 'w') as f: json.dump(config, f, indent=4, ensure_ascii=False)
+" 2>/dev/null
+  else
+    python3 -c "
+import json
+with open('${UI_CONFIG}', 'r') as f: config = json.load(f)
+app = config['.url']['frigate.application']
+app['protocol'] = ''
+app['port'] = ''
+app['url'] = '/app/frigate'
+app['gatewayPrefix'] = '/app/frigate'
+app['gatewaySocket'] = 'app.sock'
+with open('${UI_CONFIG}', 'w') as f: json.dump(config, f, indent=4, ensure_ascii=False)
+" 2>/dev/null
+  fi
+fi
+
+# =============================================
+# 3. 更新 Frigate config.yaml（auth/proxy/tls）
+# =============================================
+if [ -f "${FRIGATE_CONFIG}" ]; then
+  python3 << PYEOF
+config_path = '${FRIGATE_CONFIG}'
+auth_mode = '${AUTH_MODE}'
+
+with open(config_path, 'r') as f:
+    lines = f.readlines()
+
+out, i = [], 0
+while i < len(lines):
+    line, s = lines[i], lines[i].rstrip()
+
+    if s == 'auth:':
+        out.append(line)
+        out.append(f'  enabled: {str(auth_mode != "native").lower()}\n')
+        i += 1
+        while i < len(lines):
+            nl = lines[i]
+            if nl and nl[0] not in (' ','\t'): break
+            if 'reset_admin_password' in nl:
+                out.append(f'  reset_admin_password: {str(auth_mode == "native").lower()}\n')
+            i += 1
+        continue
+
+    if s == 'proxy:':
+        if auth_mode == 'gateway':
+            out.append(line)
+            out.append('  header_map:\n    user: X-Forwarded-User\n    role: X-Forwarded-Groups\n')
+        i += 1
+        while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
+        continue
+
+    if s == 'tls:':
+        out.append(line)
+        out.append(f'  enabled: {str(auth_mode != "gateway").lower()}\n')
+        i += 1
+        while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
+        continue
+
+    out.append(line)
+    i += 1
+
+if auth_mode == 'gateway' and not any('proxy:' in l for l in out):
+    for j, l in enumerate(out):
+        if 'reset_admin_password' in l:
+            out.insert(j + 1, '\nproxy:\n  header_map:\n    user: X-Forwarded-User\n    role: X-Forwarded-Groups\n')
+            break
+
+with open(config_path, 'w') as f:
+    f.writelines(out)
+PYEOF
+fi
+
+echo ""
+echo "配置变更完成，飞牛将自动重启应用。"
 exit 0

@@ -4,9 +4,11 @@
             "title": "Frigate",
             "icon": "images/icon_{0}.png",
             "type": "url",
-            "protocol": "https",
-            "port": "8971",
-            "url": "/",
+            "protocol": "",
+            "port": "",
+            "url": "/app/frigate",
+            "gatewayPrefix": "/app/frigate",
+            "gatewaySocket": "app.sock",
             "allUsers": true
         }
     }

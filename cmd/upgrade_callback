@@ -1,5 +1,166 @@
 #!/bin/bash
 
 ### This script is called after the user upgrades the application.
+### 为已有安装适配新版本的配置、docker-compose 模板和 Frigate 参数。
+
+CONFIG_PATH="${TRIM_PKGETC}/config.yaml"
+DOCKER_COMPOSE_TMPL="${TRIM_APPDEST}/docker/docker-compose.template.yaml"
+
+if [ ! -f "$CONFIG_PATH" ]; then
+  echo "配置文件不存在: $CONFIG_PATH, 跳过升级处理。"
+  exit 0
+fi
+
+echo "============================================"
+echo "  飞牛 Frigate — 升级配置适配"
+echo "============================================"
+echo ""
+
+# 备份原配置
+BACKUP_PATH="${CONFIG_PATH}.bak.$(date +%Y%m%d%H%M%S)"
+cp "${CONFIG_PATH}" "${BACKUP_PATH}"
+echo "已备份原配置到: ${BACKUP_PATH}"
+
+# 保存 docker-compose 模板（供后续 config_callback 使用）
+if [ ! -f "${DOCKER_COMPOSE_TMPL}" ]; then
+  if [ -f "${TRIM_APPDEST}/docker/docker-compose.yaml" ]; then
+    cp "${TRIM_APPDEST}/docker/docker-compose.yaml" "${DOCKER_COMPOSE_TMPL}"
+    echo "已保存 docker-compose 模板"
+  fi
+fi
+
+echo ""
+
+NEED_MANUAL_CHECK=0
+
+# =============================================
+# 1. 添加/更新 tls.enabled: false
+# =============================================
+echo "--- [1/3] 检查 TLS 配置 ---"
+if ! grep -q '^tls:' "${CONFIG_PATH}"; then
+  # tls 段不存在，插入到 mqtt: 之前（或文件开头）
+  if grep -q '^mqtt:' "${CONFIG_PATH}"; then
+    sed -i '/^mqtt:/i\# 飞牛统一网关前置处理 HTTPS，Frigate 无需启用 TLS\ntls:\n  enabled: false\n' "${CONFIG_PATH}"
+  else
+    sed -i '1i# 飞牛统一网关前置处理 HTTPS，Frigate 无需启用 TLS\ntls:\n  enabled: false\n' "${CONFIG_PATH}"
+  fi
+  echo "  ✓ 已添加 tls.enabled: false"
+else
+  # tls 段存在，检查 enabled 值
+  TLS_ENABLED=$(awk '/^tls:/{found=1; next} found && /^  enabled:/{print $2; exit} found && /^[a-z#]/{found=0}' "${CONFIG_PATH}")
+  if [ "${TLS_ENABLED}" = "true" ] || [ "${TLS_ENABLED}" = "True" ]; then
+    # 将 enabled: true 改为 enabled: false
+    sed -i '/^tls:/,/^[a-z]/{s/^  enabled: true/  enabled: false # 飞牛统一网关前置，关闭 TLS/}' "${CONFIG_PATH}"
+    echo "  ✓ 已将 tls.enabled 从 true 更新为 false"
+  elif [ -z "${TLS_ENABLED}" ]; then
+    # enabled 字段不存在，添加
+    sed -i '/^tls:/a\  enabled: false # 飞牛统一网关前置处理 HTTPS，Frigate 无需启用 TLS' "${CONFIG_PATH}"
+    echo "  ✓ 已添加 tls.enabled: false"
+  else
+    echo "  - tls.enabled 已是: ${TLS_ENABLED}，保持不变"
+  fi
+fi
+
+# =============================================
+# 2. 检查并设置 auth.enabled: false
+# =============================================
+echo "--- [2/3] 检查认证配置 ---"
+if grep -q '^auth:' "${CONFIG_PATH}"; then
+  AUTH_ENABLED=$(awk '/^auth:/{found=1; next} found && /^  enabled:/{print $2; exit} found && /^[a-z#]/{found=0}' "${CONFIG_PATH}")
+  
+  if [ "${AUTH_ENABLED}" = "true" ] || [ "${AUTH_ENABLED}" = "True" ]; then
+    # 将 enabled: true 改为 false
+    sed -i '/^auth:/,/^[a-z]/{s/^  enabled: true/  enabled: false # 飞牛统一网关接管认证，停用 Frigate 自带鉴权/}' "${CONFIG_PATH}"
+    echo "  ✓ 已将 auth.enabled 从 true 更新为 false"
+  elif [ -z "${AUTH_ENABLED}" ]; then
+    # enabled 字段不存在，在 auth: 后添加
+    sed -i '/^auth:/a\  enabled: false # 飞牛统一网关接管认证，停用 Frigate 自带鉴权' "${CONFIG_PATH}"
+    echo "  ✓ 已添加 auth.enabled: false"
+  else
+    echo "  - auth.enabled 已是: ${AUTH_ENABLED}，保持不变"
+  fi
+else
+  echo "  ! 未找到 auth: 段"
+  NEED_MANUAL_CHECK=1
+fi
+
+# =============================================
+# 3. 添加 proxy.header_map 配置
+# =============================================
+echo "--- [3/3] 检查代理认证配置 ---"
+if ! grep -q '^proxy:' "${CONFIG_PATH}"; then
+  # 在 reset_admin_password 行后面插入 proxy 配置
+  if grep -q 'reset_admin_password' "${CONFIG_PATH}"; then
+    sed -i '/reset_admin_password/a\# 飞牛统一网关 — 代理认证配置，将网关转发的认证 Header 映射为 Frigate 用户身份\nproxy:\n  header_map:\n    user: X-Forwarded-User\n    role: X-Forwarded-Groups' "${CONFIG_PATH}"
+    echo "  ✓ 已添加 proxy.header_map 配置"
+  else
+    echo "  ! 未找到 reset_admin_password 行，跳过 proxy 配置添加"
+    NEED_MANUAL_CHECK=1
+  fi
+else
+  # proxy 段存在，检查 header_map 是否已配置
+  if ! grep -A5 '^proxy:' "${CONFIG_PATH}" | grep -q 'header_map'; then
+    echo "  ! proxy 段存在但缺少 header_map，请手动添加"
+    NEED_MANUAL_CHECK=1
+  else
+    echo "  - proxy.header_map 已存在，保持不变"
+  fi
+fi
+
+echo ""
+echo "============================================"
+if [ ${NEED_MANUAL_CHECK} -eq 1 ]; then
+  echo "  升级处理部分完成，请手动检查以下项："
+  echo "  1. auth.enabled 是否为 false"
+  echo "  2. proxy.header_map 是否配置了 user/role"
+  echo "  3. tls.enabled 是否为 false"
+else
+  echo "  所有配置已自动适配完成！"
+fi
+echo "============================================"
+echo ""
+echo "备份文件: ${BACKUP_PATH}"
+echo "如遇问题可恢复: cp ${BACKUP_PATH} ${CONFIG_PATH}"
+
+# =============================================
+# 生成 .env（所有 wizard_* 变量）
+# =============================================
+ENV_FILE="${TRIM_APPDEST}/docker/.env"
+
+set_env() {
+  local key="$1"
+  local value="$2"
+  touch "${ENV_FILE}"
+  if grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
+    sed -i "s|^${key}=.*|${key}=${value}|" "${ENV_FILE}"
+  else
+    echo "${key}=${value}" >> "${ENV_FILE}"
+  fi
+}
+
+AUTH_MODE="${wizard_auth:-gateway}"
+if [ "${AUTH_MODE}" = "gateway" ]; then
+  set_env wizard_base_path "/app/frigate"
+else
+  set_env wizard_base_path ""
+fi
+
+if [ "${AUTH_MODE}" = "gateway" ]; then
+  set_env wizard_base_path "/app/frigate"
+else
+  set_env wizard_base_path ""
+fi
+set_env TRIM_PKGETC "${TRIM_PKGETC}"
+set_env TRIM_PKGHOME "${TRIM_PKGHOME}"
+set_env TRIM_APPDEST "${TRIM_APPDEST}"
+set_env wizard_version "${wizard_version}"
+set_env wizard_network_suffix "${wizard_network_suffix}"
+set_env wizard_auth "${wizard_auth}"
+set_env wizard_coral "${wizard_coral}"
+set_env wizard_shm_size "${wizard_shm_size}"
+set_env wizard_endpoint "${wizard_endpoint}"
+set_env wizard_github_endpoint "${wizard_github_endpoint}"
+
+echo ".env 已生成"
 
 exit 0

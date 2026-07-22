@@ -1,0 +1,3 @@
+services:
+  frigate:
+    network_mode: host

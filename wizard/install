@@ -138,6 +138,63 @@
     ]
   },
   {
+    "stepTitle": "网络与认证配置",
+    "items": [
+      {
+        "type": "select",
+        "field": "wizard_network_suffix",
+        "label": "网络模式",
+        "initValue": "-bridge",
+        "options": [
+          {
+            "label": "端口模式（默认）",
+            "value": "-bridge"
+          },
+          {
+            "label": "Host 模式",
+            "value": "-host"
+          }
+        ],
+        "rules": [
+          {
+            "required": false,
+            "message": "请选择网络模式"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "<strong>端口模式</strong>：容器使用 Docker 桥接网络，通过端口映射对外暴露服务。<br><strong>Host 模式</strong>：容器直接共享宿主机网络，性能更好但所有容器端口直接暴露到宿主机。<br>如果你需要使用小米摄像头，或者 Apple Homekit ，请选择<strong>Host 模式</strong>，否则会出现无法找到摄像头的问题。"
+      },
+      {
+        "type": "select",
+        "field": "wizard_auth",
+        "label": "认证方式",
+        "initValue": "gateway",
+        "options": [
+          {
+            "label": "飞牛统一网关（推荐）",
+            "value": "gateway"
+          },
+          {
+            "label": "Frigate 自带认证",
+            "value": "native"
+          }
+        ],
+        "rules": [
+          {
+            "required": false,
+            "message": "请选择认证方式"
+          }
+        ]
+      },
+      {
+        "type": "tips",
+        "helpText": "<strong>飞牛统一网关</strong>：使用飞牛账号体系登录，无需额外记忆密码。<br><strong>Frigate 自带认证</strong>：通过 HTTPS 端口直接访问，使用 Frigate 独立的用户名密码登录。如需外部访问需自行配置端口转发。"
+      }
+    ]
+  },
+  {
     "stepTitle": "最后的重要提醒",
     "items": [
       {

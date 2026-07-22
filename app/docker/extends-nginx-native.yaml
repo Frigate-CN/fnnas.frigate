@@ -1,0 +1,7 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: alpine:latest
+    restart: "no"
+    command: ["true"]

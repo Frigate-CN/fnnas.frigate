@@ -1,0 +1,16 @@
+services:
+  frigate:
+    devices:
+      - /dev/dri:/dev/dri # 用于GPU硬件加�?
+      - /dev/dma_heap # RockChip DMA �?
+      - /dev/rga # RockChip RGA
+      - /dev/mpp_service # RockChip MPP 服务
+    security_opt:
+      - apparmor=unconfined
+      - systempaths=unconfined
+    volumes:
+      - /sys/:/sys/:ro
+    ports:
+      - "8554:8554"
+      - "8555:8555/tcp"
+      - "8555:8555/udp"

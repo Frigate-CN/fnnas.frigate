@@ -1,6 +1,5 @@
-version: "3.8"
-
 services:
   frigate:
+    network_mode: host
     environment:
       LIBVA_DRIVER_NAME: "radeonsi"

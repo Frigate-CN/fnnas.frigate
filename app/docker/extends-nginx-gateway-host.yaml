@@ -1,0 +1,10 @@
+services:
+  nginx:
+    container_name: frigate-nginx
+    image: nginx:latest
+    user: root
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ${TRIM_APPDEST}/docker/nginx-host.conf:/etc/nginx/nginx.conf:ro
+      - ${TRIM_APPDEST}:/var/run/fn-app
