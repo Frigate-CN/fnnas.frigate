@@ -1,5 +1,0 @@
-services:
-  nginx:
-    image: alpine:latest
-    restart: "no"
-    command: ["true"]

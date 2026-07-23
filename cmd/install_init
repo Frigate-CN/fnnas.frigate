@@ -1,26 +1,5 @@
 #!/bin/bash
 
 ### This script is called before the user installs the application.
-### 修改 ui/config（认证模式相关）。
-
-UI_CONFIG="${TRIM_APPDEST}/ui/config"
-AUTH_MODE="${wizard_auth:-gateway}"
-
-# Native 认证模式：修改 ui/config 为端口直连
-if [ "${AUTH_MODE}" = "native" ]; then
-  python3 -c "
-import json
-with open('${UI_CONFIG}', 'r') as f:
-    config = json.load(f)
-app = config['.url']['frigate.application']
-app['protocol'] = 'https'
-app['port'] = '8971'
-app['url'] = '/'
-app.pop('gatewayPrefix', None)
-app.pop('gatewaySocket', None)
-with open('${UI_CONFIG}', 'w') as f:
-    json.dump(config, f, indent=4, ensure_ascii=False)
-" 2>/dev/null
-fi
 
 exit 0

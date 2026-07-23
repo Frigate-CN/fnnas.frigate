@@ -139,17 +139,6 @@ set_env() {
 }
 
 AUTH_MODE="${wizard_auth:-gateway}"
-if [ "${AUTH_MODE}" = "gateway" ]; then
-  set_env wizard_base_path "/app/frigate"
-else
-  set_env wizard_base_path ""
-fi
-
-if [ "${AUTH_MODE}" = "gateway" ]; then
-  set_env wizard_base_path "/app/frigate"
-else
-  set_env wizard_base_path ""
-fi
 set_env TRIM_PKGETC "${TRIM_PKGETC}"
 set_env TRIM_PKGHOME "${TRIM_PKGHOME}"
 set_env TRIM_APPDEST "${TRIM_APPDEST}"

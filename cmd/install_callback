@@ -2,17 +2,97 @@
 
 ### This script is called after the user installs the application.
 
-# 设置基础目录变量
 CONFIG_PATH="${TRIM_PKGETC}/config.yaml"
+ENV_FILE="${TRIM_APPDEST}/docker/.env"
+mkdir -p "${TRIM_PKGETC}"
 
-# 检查配置文件是否存在
+# =============================================
+# 始终生成 .env
+# =============================================
+set_env() {
+  local key="$1" value="$2"
+  touch "${ENV_FILE}"
+  if grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
+    sed -i "s|^${key}=.*|${key}=${value}|" "${ENV_FILE}"
+  else
+    echo "${key}=${value}" >> "${ENV_FILE}"
+  fi
+}
+
+set_env TRIM_PKGETC "${TRIM_PKGETC}"
+set_env TRIM_PKGHOME "${TRIM_PKGHOME}"
+set_env TRIM_APPDEST "${TRIM_APPDEST}"
+set_env wizard_version "${wizard_version}"
+set_env wizard_network_suffix "${wizard_network_suffix}"
+set_env wizard_auth "${wizard_auth}"
+set_env wizard_coral "${wizard_coral}"
+set_env wizard_shm_size "${wizard_shm_size}"
+set_env wizard_endpoint "${wizard_endpoint}"
+set_env wizard_github_endpoint "${wizard_github_endpoint}"
+echo ".env 已生成"
+
+# =============================================
+# 配置文件已存在 → 就地更新 auth/proxy/tls
+# =============================================
 if [ -f "$CONFIG_PATH" ]; then
-  echo "配置文件已存在: $CONFIG_PATH。不进行任何操作。"
+  echo "配置文件已存在，更新认证配置..."
+  python3 << PYEOF
+config_path = '${CONFIG_PATH}'
+auth_mode = '${wizard_auth:-gateway}'
+
+with open(config_path, 'r') as f:
+    lines = f.readlines()
+
+out, i = [], 0
+while i < len(lines):
+    line, s = lines[i], lines[i].rstrip()
+
+    if s == 'auth:':
+        out.append(line)
+        out.append(f'  enabled: {str(auth_mode == "native").lower()}\n')
+        i += 1
+        while i < len(lines):
+            nl = lines[i]
+            if nl and nl[0] not in (' ','\t'): break
+            if 'reset_admin_password' in nl:
+                out.append(f'  reset_admin_password: {str(auth_mode == "native").lower()}\n')
+            i += 1
+        continue
+
+    if s == 'proxy:':
+        if auth_mode == 'gateway':
+            out.append(line)
+            out.append('  header_map:\n    user: X-Forwarded-User\n    role: X-Forwarded-Groups\n')
+        i += 1
+        while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
+        continue
+
+    if s == 'tls:':
+        out.append(line)
+        out.append(f'  enabled: {str(auth_mode != "gateway").lower()}\n')
+        i += 1
+        while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
+        continue
+
+    out.append(line)
+    i += 1
+
+if auth_mode == 'gateway' and not any('proxy:' in l for l in out):
+    for j, l in enumerate(out):
+        if 'reset_admin_password' in l:
+            out.insert(j + 1, '\nproxy:\n  header_map:\n    user: X-Forwarded-User\n    role: X-Forwarded-Groups\n')
+            break
+
+with open(config_path, 'w') as f:
+    f.writelines(out)
+PYEOF
+  echo "认证配置已更新"
   exit 0
 fi
 
-# 创建目录（如果不存在）
-mkdir -p "${TRIM_PKGETC}"
+# =============================================
+# 配置文件不存在 → 生成全新配置
+# =============================================
 
 # 基础配置内容（公共部分）
 cat <<'EOF' > "${CONFIG_PATH}"
@@ -40,6 +120,10 @@ if [ "${AUTH_MODE}" = "native" ]; then
 auth:
   enabled: true # 启用 Frigate 自带的认证
   reset_admin_password: true # 首次启动时重置密码，密码会打印在日志中
+
+# nginx 始终通过 HTTP 代理，Frigate 无需启用 TLS
+tls:
+  enabled: false
 
 EOF
 else
@@ -256,34 +340,5 @@ EOF
 
 fi
 echo "配置文件已生成在 ${CONFIG_PATH}"
-
-# =============================================
-# 生成 .env（所有 wizard_* 变量）
-# =============================================
-ENV_FILE="${TRIM_APPDEST}/docker/.env"
-
-set_env() {
-  local key="$1"
-  local value="$2"
-  touch "${ENV_FILE}"
-  if grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
-    sed -i "s|^${key}=.*|${key}=${value}|" "${ENV_FILE}"
-  else
-    echo "${key}=${value}" >> "${ENV_FILE}"
-  fi
-}
-
-if [ "${AUTH_MODE}" = "gateway" ]; then
-  set_env wizard_base_path "/app/frigate"
-else
-  set_env wizard_base_path ""
-fi
-
-# 写入所有 wizard_* 和 TRIM_* 变量到 .env
-while IFS='=' read -r key value; do
-  set_env "${key}" "${value}"
-done < <(env | grep -E '^(wizard_|TRIM_)')
-
-echo ".env 已生成"
 
 exit 0

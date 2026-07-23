@@ -4,7 +4,6 @@
 ### 更新 .env、ui/config 和 Frigate config.yaml。
 
 ENV_FILE="${TRIM_APPDEST}/docker/.env"
-UI_CONFIG="${TRIM_APPDEST}/ui/config"
 FRIGATE_CONFIG="${TRIM_PKGETC}/config.yaml"
 
 AUTH_MODE="${wizard_auth:-gateway}"
@@ -27,13 +26,7 @@ set_env() {
 }
 
 # =============================================
-# 1. 更新 .env（显式写入，避免 env 抓不到）
-# =============================================
-if [ "${AUTH_MODE}" = "gateway" ]; then
-  set_env wizard_base_path "/app/frigate"
-else
-  set_env wizard_base_path ""
-fi
+# 1. 更新 .env
 set_env TRIM_PKGETC "${TRIM_PKGETC}"
 set_env TRIM_PKGHOME "${TRIM_PKGHOME}"
 set_env TRIM_APPDEST "${TRIM_APPDEST}"
@@ -48,38 +41,7 @@ set_env wizard_github_endpoint "${wizard_github_endpoint}"
 echo ".env 已更新"
 
 # =============================================
-# 2. 更新 ui/config
-# =============================================
-if [ -f "${UI_CONFIG}" ]; then
-  if [ "${AUTH_MODE}" = "native" ]; then
-    python3 -c "
-import json
-with open('${UI_CONFIG}', 'r') as f: config = json.load(f)
-app = config['.url']['frigate.application']
-app['protocol'] = 'https'
-app['port'] = '8971'
-app['url'] = '/'
-app.pop('gatewayPrefix', None)
-app.pop('gatewaySocket', None)
-with open('${UI_CONFIG}', 'w') as f: json.dump(config, f, indent=4, ensure_ascii=False)
-" 2>/dev/null
-  else
-    python3 -c "
-import json
-with open('${UI_CONFIG}', 'r') as f: config = json.load(f)
-app = config['.url']['frigate.application']
-app['protocol'] = ''
-app['port'] = ''
-app['url'] = '/app/frigate'
-app['gatewayPrefix'] = '/app/frigate'
-app['gatewaySocket'] = 'app.sock'
-with open('${UI_CONFIG}', 'w') as f: json.dump(config, f, indent=4, ensure_ascii=False)
-" 2>/dev/null
-  fi
-fi
-
-# =============================================
-# 3. 更新 Frigate config.yaml（auth/proxy/tls）
+# 2. 更新 Frigate config.yaml（auth/proxy/tls）
 # =============================================
 if [ -f "${FRIGATE_CONFIG}" ]; then
   python3 << PYEOF
@@ -95,7 +57,7 @@ while i < len(lines):
 
     if s == 'auth:':
         out.append(line)
-        out.append(f'  enabled: {str(auth_mode != "native").lower()}\n')
+        out.append(f'  enabled: {str(auth_mode == "native").lower()}\n')
         i += 1
         while i < len(lines):
             nl = lines[i]
@@ -115,7 +77,7 @@ while i < len(lines):
 
     if s == 'tls:':
         out.append(line)
-        out.append(f'  enabled: {str(auth_mode != "gateway").lower()}\n')
+        out.append('  enabled: false # nginx 始终通过 HTTP 代理，关闭 TLS\n')
         i += 1
         while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
         continue

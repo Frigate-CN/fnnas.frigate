@@ -22,11 +22,11 @@ services:
           size: 1000000000
     environment:
       TZ: "Asia/Shanghai"
-      FRIGATE_BASE_PATH: "${wizard_base_path:-}"
+      FRIGATE_BASE_PATH: "/app/frigate"
       HF_ENDPOINT: $wizard_endpoint
       GITHUB_ENDPOINT: $wizard_github_endpoint
 
   nginx:
     extends:
-      file: extends-nginx-${wizard_auth}${wizard_network_suffix}.yaml
+      file: extends-nginx${wizard_network_suffix}.yaml
       service: nginx
