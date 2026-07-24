@@ -4,7 +4,7 @@
     "items": [
       {
         "type": "tips",
-        "helpText": "Frigate 正在升级到新版本。你可以重新配置以下选项。"
+        "helpText": "本次 Frigate 升级将会修改网络模式和认证方式，可以使用飞牛自带的统一网关认证方式，登录飞牛页面后就可以直接访问 Frigate，无需使用账号密码；也可以使用 Frigate 自带的认证方式，但需要注意地址协议从 https 变为了 http"
       }
     ]
   },

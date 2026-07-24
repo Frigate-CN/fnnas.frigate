@@ -131,7 +131,7 @@ else
   cat <<'EOF' >> "${CONFIG_PATH}"
 auth:
   enabled: false # 飞牛统一网关接管认证，停用 Frigate 自带鉴权
-  reset_admin_password: false # 密码管理由飞牛账号体系负责
+  reset_admin_password: false # 如果启用 Frigate 自带认证，而且忘记了密码，请设置为 true，启动时会重置密码，密码会打印在日志中
 
 # 飞牛统一网关 — 代理认证配置
 # 将飞牛网关转发的认证 Header (X-Trim-*) 映射为 Frigate 的用户身份

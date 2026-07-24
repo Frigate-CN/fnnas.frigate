@@ -2,8 +2,8 @@ services:
   frigate:
     network_mode: host
     devices:
-      - /dev/dri:/dev/dri # 用于GPU硬件加�?
-      - /dev/dma_heap # RockChip DMA �?
+      - /dev/dri:/dev/dri # 用于GPU硬件加速
+      - /dev/dma_heap # RockChip DMA 加速
       - /dev/rga # RockChip RGA
       - /dev/mpp_service # RockChip MPP 服务
     security_opt:
