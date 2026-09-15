@@ -1,4 +1,5 @@
 services:
+  # 请尽量不要直接修改Compose文件
   frigate:
     container_name: frigate
     extends:
@@ -7,7 +8,7 @@ services:
     privileged: true
     restart: unless-stopped
     stop_grace_period: 30s
-    image: docker.cnb.cool/frigate-cn/frigate:0.18.0-beta1${wizard_version}
+    image: docker.cnb.cool/frigate-cn/frigate:__FRIGATE_VERSION__${wizard_version}
     shm_size: ${wizard_shm_size}
     devices:
       - /dev/dri/:/dev/dri/${wizard_coral}
@@ -15,18 +16,13 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${TRIM_PKGETC}:/config
       - ${TRIM_PKGHOME}/video:/media/frigate
-      - ${TRIM_APPDEST}:/app/frigate
+      - ${TRIM_APPDEST}/docker/frigate-nginx-${wizard_auth}.conf:/usr/local/nginx/conf/nginx.conf:ro
+      - ${TRIM_APPDEST}:/var/run/fn-app
       - type: tmpfs
         target: /tmp/cache
         tmpfs:
           size: 1000000000
     environment:
       TZ: "Asia/Shanghai"
-      FRIGATE_BASE_PATH: "/app/frigate"
       HF_ENDPOINT: $wizard_endpoint
       GITHUB_ENDPOINT: $wizard_github_endpoint
-
-  nginx:
-    extends:
-      file: extends-nginx${wizard_network_suffix}.yaml
-      service: nginx

@@ -1,0 +1,14 @@
+branch:
+  - buttons:
+      - name: 构建指定版本
+        event: web_trigger_build
+        description: 手动指定 Frigate 版本号构建飞牛插件，并创建对应 release
+        groupName: 构建操作
+        inputs:
+          frigate_version:
+            name: Frigate 版本号
+            description: GitHub release 的 tag，例如 v0.18.0
+            type: input
+            required: true
+            placeholder: 例如 v0.18.0
+            default: v0.18.0

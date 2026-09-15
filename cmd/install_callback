@@ -29,6 +29,7 @@ set_env wizard_coral "${wizard_coral}"
 set_env wizard_shm_size "${wizard_shm_size}"
 set_env wizard_endpoint "${wizard_endpoint}"
 set_env wizard_github_endpoint "${wizard_github_endpoint}"
+set_env TRIM_SERVICE_PORT "${TRIM_SERVICE_PORT}"
 echo ".env 已生成"
 
 # =============================================
@@ -69,7 +70,12 @@ while i < len(lines):
 
     if s == 'tls:':
         out.append(line)
-        out.append(f'  enabled: {str(auth_mode != "gateway").lower()}\n')
+        out.append('  enabled: false # nginx 始终通过 HTTP 代理，关闭 TLS\n')
+        i += 1
+        while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
+        continue
+
+    if s == 'networking:':
         i += 1
         while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
         continue

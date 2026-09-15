@@ -11,13 +11,11 @@ master:
             username: ${github_username}
             password: ${github_access_token}
         - name: download fnpack cli
-          script: curl -O https://static2.fnnas.com/fnpack/fnpack-1.2.1-linux-amd64
+          script: curl -O https://static2.fnnas.com/fnpack/fnpack-1.2.3-linux-amd64
         - name: copy to usr
           script: |
-            chmod +x fnpack-1.2.1-linux-amd64
-            mv fnpack-1.2.1-linux-amd64 /usr/local/bin/fnpack
-        - name: build fnpack
-          script: fnpack build
+            chmod +x fnpack-1.2.3-linux-amd64
+            mv fnpack-1.2.3-linux-amd64 /usr/local/bin/fnpack
         - name: 获取tag并设置环境变量
           script:
             - |
@@ -43,6 +41,21 @@ master:
               echo "##[set-output TAG=$TAG_NAME]"
           exports:
             TAG: RELEASE_TAG
+        - name: 设置版本号
+          script: |
+            # 去掉版本号前面的 v 前缀
+            VERSION_NO_V="${RELEASE_TAG#v}"
+            if [ -z "$VERSION_NO_V" ]; then
+              echo "版本号不能为空"
+              exit 1
+            fi
+            sed -i "s/^version=.*/version=${VERSION_NO_V}/" manifest
+            sed -i "s/__FRIGATE_VERSION__/${VERSION_NO_V}/" app/docker/docker-compose.yaml
+            echo "manifest 版本号已设置为: ${VERSION_NO_V}"
+            cat manifest
+            grep 'image:' app/docker/docker-compose.yaml
+        - name: build fnpack
+          script: fnpack build
         - name: create release
           type: git:release
           options:
@@ -53,5 +66,40 @@ master:
           settings:
             type: UPLOAD
             tag: $RELEASE_TAG
+            attachments:
+              - frigate.fpk
+  web_trigger_build:
+    - stages:
+        - name: download fnpack cli
+          script: curl -O https://static2.fnnas.com/fnpack/fnpack-1.2.3-linux-amd64
+        - name: copy to usr
+          script: |
+            chmod +x fnpack-1.2.3-linux-amd64
+            mv fnpack-1.2.3-linux-amd64 /usr/local/bin/fnpack
+        - name: 设置版本号
+          script: |
+            # 去掉版本号前面的 v 前缀
+            VERSION_NO_V="${frigate_version#v}"
+            if [ -z "$VERSION_NO_V" ]; then
+              echo "版本号不能为空"
+              exit 1
+            fi
+            sed -i "s/^version=.*/version=${VERSION_NO_V}/" manifest
+            sed -i "s/__FRIGATE_VERSION__/${VERSION_NO_V}/" app/docker/docker-compose.yaml
+            echo "manifest 版本号已设置为: ${VERSION_NO_V}"
+            cat manifest
+            grep 'image:' app/docker/docker-compose.yaml
+        - name: build fnpack
+          script: fnpack build
+        - name: create release
+          type: git:release
+          options:
+            tag: $frigate_version
+            description: 飞牛专用插件
+        - name: release 上传附件
+          image: cnbcool/attachments:latest
+          settings:
+            type: UPLOAD
+            tag: $frigate_version
             attachments:
               - frigate.fpk
