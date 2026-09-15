@@ -8,7 +8,7 @@
       },
       {
         "type": "tips",
-        "helpText": "Frigate 是一个完整的本地网络视频录像机（NVR），专为Home Assistant设计，具备 AI 目标/物体检测功能。使用 OpenCV 和 TensorFlow 在本地为 IP 摄像头执行实时物体检测。<br>目前该项目还处于预发布版本，还不是正式产品（1.0），请多参考我们的<a href=\"https://docs.frigate-cn.video/\">中文文档</a>进行使用。<br><br>欢迎关注我们的社交媒体：<br><a href=\"https://space.bilibili.com/3546894915602564\" target=\"_blank\">bilibili</a><br><a href=\"https://qm.qq.com/q/uikrC4l46A\" target=\"_blank\">QQ交流群</a>"
+        "helpText": "Frigate 是一个完整的本地网络视频录像机（NVR），专为Home Assistant设计，具备 AI 目标/物体检测功能。使用 OpenCV 和 TensorFlow 在本地为 IP 摄像头执行实时物体检测。<br>目前该项目还处于预发布版本，还不是正式产品（1.0），请多参考我们的<a href=\"https://docs.frigate-cn.video/\">中文文档</a>进行使用。<br><br>欢迎关注我们的社交媒体：<br><a href=\"https://space.bilibili.com/3546894915602564\" target=\"_blank\">bilibili</a><br><a href=\"https://qm.qq.com/q/uikrC4l46A\" target=\"_blank\">QQ交流群</a><br><br><h2>安装前请注意：</h2>这是一个 AI 为基础的 NVR，对配置有一定要求，不支持过于老旧（Intel <strong>不得低于 6 代</strong>，不完全支持J系列 CPU）的硬件，即使是较新的低端硬件，也好过于非常老旧的平台，请一定要注意这一点。具体硬件要求a href=\"https://docs.frigate-cn.video/frigate/planning_setup\" target=\"_blank\">请参阅文档<</a>"
       }
     ]
   },
@@ -199,7 +199,7 @@
     "items": [
       {
         "type": "tips",
-        "helpText": "<h1>警告！</h1><br>注意，首次创建时，密码将输出在 Docker 的日志文件中，请安装完成后立刻打开 Docker 应用，在Frigate容器的日志中寻找密码。<br>更多找回密码的方法请<a href=\"https://docs.frigate-cn.video/configuration/authentication#resetting-admin-password\" target=\"_blank\">参阅文档"
+        "helpText": "<h1>警告！</h1><br>注意，如果你选择的是使用 Frigate 自带的认证，首次创建时，密码将输出在 Docker 的日志文件中，请安装完成后立刻打开 Docker 应用，在Frigate容器的日志中寻找密码。<br>更多找回密码的方法请<a href=\"https://docs.frigate-cn.video/configuration/authentication#resetting-admin-password\" target=\"_blank\">参阅文档"
       },
       {
         "type": "switch",
