@@ -2,6 +2,117 @@
 
 CONTAINER_NAME="frigate"
 FILE_PATH="${TRIM_APPDEST}/docker/docker-compose.yaml"
+SOCKET_PATH="${TRIM_APPDEST}/app.sock"
+LISTEN_CONFIG="${TRIM_APPDEST}/docker/listen-internal.conf"
+FRIGATE_CONFIG="${TRIM_PKGETC}/config.yaml"
+
+cleanup_socket() {
+  if [ -e "${SOCKET_PATH}" ]; then
+    rm -f "${SOCKET_PATH}"
+    echo "Removed stale Frigate socket: ${SOCKET_PATH}"
+  fi
+}
+
+port_in_use() {
+  local port="$1"
+  ss -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "(^|:)${port}$"
+}
+
+select_internal_port() {
+  local candidate
+  for candidate in 5000 $(seq 5010 5099); do
+    case " ${TRIM_SERVICE_PORT:-} 5001 5002 1984 8082 8554 8555 8971 " in
+      *" ${candidate} "*) continue ;;
+    esac
+    if ! port_in_use "${candidate}"; then
+      printf '%s' "${candidate}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+write_internal_listen_config() {
+  local port="$1"
+  mkdir -p "$(dirname "${LISTEN_CONFIG}")"
+  printf 'listen 127.0.0.1:%s;\n' "${port}" > "${LISTEN_CONFIG}"
+  if [ -z "${FRIGATE_CONFIG}" ] || [ ! -f "${FRIGATE_CONFIG}" ]; then
+    return 0
+  fi
+  INTERNAL_PORT="${port}" CONFIG_PATH="${FRIGATE_CONFIG}" python3 - <<'PYEOF'
+import os
+import re
+
+path = os.environ["CONFIG_PATH"]
+port = os.environ["INTERNAL_PORT"]
+with open(path, encoding="utf-8") as handle:
+    lines = handle.readlines()
+
+def top_level_end(start):
+    index = start + 1
+    while index < len(lines) and (not lines[index].strip() or lines[index][0].isspace()):
+        index += 1
+    return index
+
+networking = next((i for i, line in enumerate(lines) if line.rstrip("\r\n") == "networking:"), None)
+if networking is None:
+    if lines and not lines[-1].endswith("\n"):
+        lines[-1] += "\n"
+    lines.extend(["\n", "networking:\n", f"  listen:\n", f"    internal: {port}\n"])
+else:
+    networking_end = top_level_end(networking)
+    listen = next((i for i in range(networking + 1, networking_end)
+                   if re.match(r"^  listen:\s*(?:#.*)?$", lines[i].rstrip("\r\n"))), None)
+    if listen is None:
+        lines[networking + 1:networking + 1] = [f"  listen:\n", f"    internal: {port}\n"]
+    else:
+        listen_end = networking + 1
+        while listen_end < networking_end and (not lines[listen_end].strip() or lines[listen_end].startswith((" ", "\t"))):
+            listen_end += 1
+        internal = next((i for i in range(listen + 1, listen_end)
+                         if re.match(r"^    internal:\s*", lines[i])), None)
+        if internal is None:
+            lines[listen + 1:listen + 1] = [f"    internal: {port}\n"]
+        else:
+            newline = "\n" if lines[internal].endswith("\n") else ""
+            lines[internal] = f"    internal: {port}{newline}"
+
+with open(path, "w", encoding="utf-8") as handle:
+    handle.writelines(lines)
+PYEOF
+}
+
+write_compose_override() {
+  local override="${TRIM_APPDEST}/docker/docker-compose.override.yaml"
+  rm -f "${override}"
+  if [ "${wizard_auth:-gateway}" = "native" ] && [ "${wizard_network_suffix:--bridge}" != "-host" ]; then
+    cat > "${override}" <<EOF
+services:
+  frigate:
+    ports:
+      - "${TRIM_SERVICE_PORT:-8971}:8971"
+EOF
+  fi
+}
+
+write_native_port_config() {
+  local port="${TRIM_SERVICE_PORT:-8971}"
+  printf 'map $host $frigate_service_port { default %s; }\n' "${port}" \
+    > "${TRIM_APPDEST}/docker/native-port.conf"
+}
+
+prepare_runtime() {
+  cleanup_socket
+  local port
+  port="$(select_internal_port)" || {
+    echo "No free internal Frigate port found" >&2
+    return 1
+  }
+  write_internal_listen_config "${port}" || return 1
+  write_compose_override
+  write_native_port_config
+  echo "Frigate internal listener: 127.0.0.1:${port}"
+}
 is_running() {
   docker inspect "$CONTAINER_NAME" 2>/dev/null | grep -q '"Status": "running"'
 }
@@ -9,20 +120,26 @@ is_running() {
 case $1 in
 start)
     cd "$(dirname "$FILE_PATH")"
+    prepare_runtime || exit 1
     docker compose -p frigate down
     docker compose -p frigate up -d
-    exit $?
+    status=$?
+    [ "$status" -eq 0 ] || cleanup_socket
+    exit "$status"
     ;;
 stop)
     cd "$(dirname "$FILE_PATH")"
     docker compose -p frigate down
-    exit $?
+    status=$?
+    cleanup_socket
+    exit "$status"
     ;;
 status)
     if is_running; then
         exit 0
     else
         cd "$(dirname "$FILE_PATH")"
+        prepare_runtime || exit 1
         docker compose -p frigate down
         docker compose -p frigate up -d
         exit 3

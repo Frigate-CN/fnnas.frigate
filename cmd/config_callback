@@ -9,6 +9,9 @@ FRIGATE_CONFIG="${TRIM_PKGETC}/config.yaml"
 AUTH_MODE="${wizard_auth:-gateway}"
 NETWORK_SUFFIX="${wizard_network_suffix:--bridge}"
 
+cleanup_socket() { rm -f "${TRIM_APPDEST}/app.sock"; }
+trap cleanup_socket EXIT
+
 echo "============================================"
 echo "  飞牛 Frigate — 配置变更"
 echo "  网络: ${NETWORK_SUFFIX}"
@@ -17,6 +20,8 @@ echo "============================================"
 
 set_env() {
   local key="$1" value="$2"
+  value="${value//$'\r'/ }"
+  value="${value//$'\n'/ }"
   touch "${ENV_FILE}"
   if grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
     sed -i "s|^${key}=.*|${key}=${value}|" "${ENV_FILE}"
@@ -30,6 +35,7 @@ set_env() {
 set_env TRIM_PKGETC "${TRIM_PKGETC}"
 set_env TRIM_PKGHOME "${TRIM_PKGHOME}"
 set_env TRIM_APPDEST "${TRIM_APPDEST}"
+set_env TRIM_SERVICE_PORT "${TRIM_SERVICE_PORT}"
 set_env wizard_version "${wizard_version}"
 set_env wizard_network_suffix "${wizard_network_suffix}"
 set_env wizard_auth "${wizard_auth}"
@@ -51,31 +57,56 @@ auth_mode = '${AUTH_MODE}'
 with open(config_path, 'r') as f:
     lines = f.readlines()
 
+tls_start = next((i for i, line in enumerate(lines) if line.rstrip('\r\n') == 'tls:'), None)
+if tls_start is not None:
+    tls_end = tls_start + 1
+    while tls_end < len(lines) and (not lines[tls_end].strip() or lines[tls_end][0].isspace()):
+        tls_end += 1
+    enabled = next((i for i in range(tls_start + 1, tls_end) if lines[i].startswith('  enabled:')), None)
+    if enabled is None:
+        lines.insert(tls_start + 1, '  enabled: false\n')
+    else:
+        lines[enabled] = '  enabled: false\n'
+
 out, i = [], 0
 while i < len(lines):
     line, s = lines[i], lines[i].rstrip()
 
     if s == 'auth:':
         out.append(line)
-        out.append(f'  enabled: {str(auth_mode == "native").lower()}\n')
         i += 1
+        found_enabled = found_reset = False
         while i < len(lines):
             nl = lines[i]
-            if nl and nl[0] not in (' ','\t'): break
-            if 'reset_admin_password' in nl:
+            if nl.strip() and nl[0] not in (' ','\t'): break
+            if nl.startswith('  enabled:'):
+                out.append(f'  enabled: {str(auth_mode == "native").lower()}\n')
+                found_enabled = True
+            elif nl.startswith('  reset_admin_password:'):
                 out.append(f'  reset_admin_password: {str(auth_mode == "native").lower()}\n')
+                found_reset = True
+            else:
+                out.append(nl)
             i += 1
+        if not found_enabled:
+            out.append(f'  enabled: {str(auth_mode == "native").lower()}\n')
+        if not found_reset:
+            out.append(f'  reset_admin_password: {str(auth_mode == "native").lower()}\n')
         continue
 
     if s == 'proxy:':
-        if auth_mode == 'gateway':
-            out.append(line)
-            out.append('  header_map:\n    user: X-Forwarded-User\n    role: X-Forwarded-Groups\n')
+        out.append(line)
         i += 1
-        while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
+        has_header_map = False
+        while i < len(lines) and (not lines[i].strip() or lines[i][0] in (' ','\t')):
+            has_header_map = has_header_map or lines[i].startswith('  header_map:')
+            out.append(lines[i])
+            i += 1
+        if auth_mode == 'gateway' and not has_header_map:
+            out.extend(['  header_map:\n', '    user: X-Forwarded-User\n', '    role: X-Forwarded-Groups\n'])
         continue
 
-    if s == 'tls:':
+    if s == '__tls_handled__':
         out.append(line)
         out.append('  enabled: false # nginx 始终通过 HTTP 代理，关闭 TLS\n')
         i += 1
@@ -83,8 +114,11 @@ while i < len(lines):
         continue
 
     if s == 'networking:':
+        out.append(line)
         i += 1
-        while i < len(lines) and lines[i] and lines[i][0] in (' ','\t'): i += 1
+        while i < len(lines) and (not lines[i].strip() or lines[i][0] in (' ','\t')):
+            out.append(lines[i])
+            i += 1
         continue
 
     out.append(line)

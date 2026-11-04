@@ -1,7 +1,6 @@
 services:
   frigate:
     ports:
-      - "${TRIM_SERVICE_PORT}:8971"
       - "8554:8554"
       - "8555:8555/tcp"
       - "8555:8555/udp"

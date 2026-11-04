@@ -6,6 +6,9 @@
 CONFIG_PATH="${TRIM_PKGETC}/config.yaml"
 DOCKER_COMPOSE_TMPL="${TRIM_APPDEST}/docker/docker-compose.template.yaml"
 
+cleanup_socket() { rm -f "${TRIM_APPDEST}/app.sock"; }
+trap cleanup_socket EXIT
+
 if [ ! -f "$CONFIG_PATH" ]; then
   echo "配置文件不存在: $CONFIG_PATH, 跳过升级处理。"
   exit 0
@@ -130,6 +133,8 @@ ENV_FILE="${TRIM_APPDEST}/docker/.env"
 set_env() {
   local key="$1"
   local value="$2"
+  value="${value//$'\r'/ }"
+  value="${value//$'\n'/ }"
   touch "${ENV_FILE}"
   if grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
     sed -i "s|^${key}=.*|${key}=${value}|" "${ENV_FILE}"
@@ -149,6 +154,37 @@ set_env wizard_coral "${wizard_coral}"
 set_env wizard_shm_size "${wizard_shm_size}"
 set_env wizard_endpoint "${wizard_endpoint}"
 set_env wizard_github_endpoint "${wizard_github_endpoint}"
+set_env TRIM_SERVICE_PORT "${TRIM_SERVICE_PORT}"
+
+CONFIG_PATH="${CONFIG_PATH}" python3 - <<'PYEOF'
+import os
+import re
+
+path = os.environ["CONFIG_PATH"]
+with open(path, encoding="utf-8") as handle:
+    lines = handle.readlines()
+
+networking = next((i for i, line in enumerate(lines) if line.rstrip("\r\n") == "networking:"), None)
+if networking is None:
+    lines.extend(["\n", "networking:\n", "  listen:\n", "    internal: 5000\n"])
+else:
+    end = networking + 1
+    while end < len(lines) and (not lines[end].strip() or lines[end][0].isspace()):
+        end += 1
+    listen = next((i for i in range(networking + 1, end)
+                   if re.match(r"^  listen:\s*(?:#.*)?$", lines[i].rstrip("\r\n"))), None)
+    if listen is None:
+        lines[networking + 1:networking + 1] = ["  listen:\n", "    internal: 5000\n"]
+    else:
+        listen_end = listen + 1
+        while listen_end < end and (not lines[listen_end].strip() or lines[listen_end][0].isspace()):
+            listen_end += 1
+        if not any(re.match(r"^    internal:", line) for line in lines[listen + 1:listen_end]):
+            lines.insert(listen + 1, "    internal: 5000\n")
+
+with open(path, "w", encoding="utf-8") as handle:
+    handle.writelines(lines)
+PYEOF
 
 echo ".env 已生成"
 

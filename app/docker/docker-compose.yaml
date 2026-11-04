@@ -7,7 +7,7 @@ services:
       service: frigate
     privileged: true
     restart: unless-stopped
-    stop_grace_period: 30s
+    stop_grace_period: 60s
     image: docker.cnb.cool/frigate-cn/frigate:__FRIGATE_VERSION__${wizard_version}
     shm_size: ${wizard_shm_size}
     devices:
@@ -18,6 +18,8 @@ services:
       - ${TRIM_PKGHOME}/video:/media/frigate
       - ${TRIM_APPDEST}/docker/frigate-nginx-${wizard_auth}.conf:/usr/local/nginx/conf/nginx.conf:ro
       - ${TRIM_APPDEST}:/var/run/fn-app
+      - ${TRIM_APPDEST}/docker/listen-internal.conf:/usr/local/nginx/conf/listen-internal.conf:ro
+      - ${TRIM_APPDEST}/docker/native-port.conf:/usr/local/nginx/conf/native-port.conf:ro
       - type: tmpfs
         target: /tmp/cache
         tmpfs:
