@@ -1,5 +1,5 @@
 appname=frigate
-version=0.18.0
+version=0.18.2
 display_name="${common.displayName}"
 desc="${common.desc}"
 platform=all
