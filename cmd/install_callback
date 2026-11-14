@@ -24,6 +24,32 @@ set_env() {
   fi
 }
 
+# shm 大小直接写入 compose，非法值会导致容器无法启动，这里做一次校验
+normalize_shm_size() {
+  local size fallback
+  size="$(printf '%s' "${1:-}" | tr -d '[:space:]')"
+  fallback="$(printf '%s' "${2:-}" | tr -d '[:space:]')"
+  if [ -z "${size}" ]; then
+    size="${fallback}"
+  fi
+  # 无单位时按 MB 处理，避免 compose 把纯数字当成字节
+  if printf '%s' "${size}" | grep -qE '^[0-9]+(\.[0-9]+)?$'; then
+    size="${size}mb"
+  fi
+  if printf '%s' "${size}" | grep -qiE '^[0-9]+(\.[0-9]+)?(b|k|kb|m|mb|g|gb)$'; then
+    printf '%s' "${size}"
+  else
+    printf '%s' "512mb"
+  fi
+}
+
+CURRENT_SHM=""
+if [ -f "${ENV_FILE}" ]; then
+  CURRENT_SHM="$(grep -m1 '^wizard_shm_size=' "${ENV_FILE}" | cut -d= -f2-)"
+fi
+
+SHM_SIZE="$(normalize_shm_size "${wizard_shm_size}" "${CURRENT_SHM}")"
+
 set_env TRIM_PKGETC "${TRIM_PKGETC}"
 set_env TRIM_PKGHOME "${TRIM_PKGHOME}"
 set_env TRIM_APPDEST "${TRIM_APPDEST}"
@@ -31,7 +57,7 @@ set_env wizard_version "${wizard_version}"
 set_env wizard_network_suffix "${wizard_network_suffix}"
 set_env wizard_auth "${wizard_auth}"
 set_env wizard_coral "${wizard_coral}"
-set_env wizard_shm_size "${wizard_shm_size}"
+set_env wizard_shm_size "${SHM_SIZE}"
 set_env wizard_endpoint "${wizard_endpoint}"
 set_env wizard_github_endpoint "${wizard_github_endpoint}"
 set_env TRIM_SERVICE_PORT "${TRIM_SERVICE_PORT}"

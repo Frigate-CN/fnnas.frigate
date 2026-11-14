@@ -1,7 +1,7 @@
 {
     ".url": {
         "frigate.application": {
-            "title": "Frigate",
+            "title": "${entry.title}",
             "icon": "images/icon_{0}.png",
             "type": "url",
             "protocol": "",

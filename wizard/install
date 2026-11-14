@@ -1,100 +1,100 @@
 [
   {
-    "stepTitle": "欢迎安装 Frigate",
+    "stepTitle": "${install.welcomeStepTitle}",
     "items": [
       {
         "type": "tips",
-        "helpText": "感谢你使用 Frigate"
+        "helpText": "${install.greetingText}"
       },
       {
         "type": "tips",
-        "helpText": "Frigate 是一个完整的本地网络视频录像机（NVR），专为Home Assistant设计，具备 AI 目标/物体检测功能。使用 OpenCV 和 TensorFlow 在本地为 IP 摄像头执行实时物体检测。<br>目前该项目还处于预发布版本，还不是正式产品（1.0），请多参考我们的<a href=\"https://docs.frigate-cn.video/\">中文文档</a>进行使用。<br><br>欢迎关注我们的社交媒体：<br><a href=\"https://space.bilibili.com/3546894915602564\" target=\"_blank\">bilibili</a><br><a href=\"https://qm.qq.com/q/uikrC4l46A\" target=\"_blank\">QQ交流群</a><br><br><h2>安装前请注意：</h2>这是一个 AI 为基础的 NVR，对配置有一定要求，不支持过于老旧（Intel <strong>不得低于 6 代</strong>，不完全支持J系列 CPU）的硬件，即使是较新的低端硬件，也好过于非常老旧的平台，请一定要注意这一点。具体硬件要求a href=\"https://docs.frigate-cn.video/frigate/planning_setup\" target=\"_blank\">请参阅文档<</a>"
+        "helpText": "${install.introText}"
       }
     ]
   },
   {
-    "stepTitle": "请选择安装版本",
+    "stepTitle": "${install.versionStepTitle}",
     "items": [
       {
         "type": "select",
         "field": "wizard_version",
-        "label": "版本",
+        "label": "${install.versionLabel}",
         "initValue": "",
         "options": [
           {
-            "label": "默认",
+            "label": "${install.versionDefaultLabel}",
             "value": ""
           },
           {
-            "label": "NVIDIA GPU",
+            "label": "${install.versionTensorrtLabel}",
             "value": "-tensorrt"
           },
           {
-            "label": "AMD GPU",
+            "label": "${install.versionRocmLabel}",
             "value": "-rocm"
           },
           {
-            "label": "Rockchip",
+            "label": "${install.versionRkLabel}",
             "value": "-rk"
           }
         ],
         "rules": [
           {
             "required": false,
-            "message": "请选择使用的版本"
+            "message": "${install.versionRequiredMessage}"
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "Frigate 支持多种硬件加速的方式。<br>如果你使用的是 Intel 核显/独显，请使用默认镜像。该镜像同时还支持 Coral 与 Hailo8 加速卡<br>如果你使用的是 NVIDIA 的 GPU，请选择 <strong>NVIDIA GPU</strong><br>如果你是 AMD 的核显或独显，请选择 <strong>AMD GPU</strong><br>如果你使用的是 Rockchip 芯片，请选择 <strong>Rockchip</strong><br><br>注意，NVIDIA 还需要在应用商店先安装 <strong>NVIDIA Container Toolkit</strong> 才能正常使用；<br>AMD 不支持老版本的核显硬件加速。"
+        "helpText": "${install.versionHelpText}"
       }
     ]
   },
   {
-    "stepTitle": "硬件加速",
+    "stepTitle": "${install.coralStepTitle}",
     "items": [
       {
         "type": "select",
         "field": "wizard_coral",
-        "label": "是否使用Coral加速卡？",
+        "label": "${install.coralLabel}",
         "initValue": "\n      ",
         "options": [
           {
-            "label": "无",
+            "label": "${install.coralNoneLabel}",
             "value": "\n      "
           },
           {
-            "label": "USB Coral",
+            "label": "${install.coralUsbLabel}",
             "value": "\n      - /dev/bus/usb:/dev/bus/usb\n"
           },
           {
-            "label": "M.2 Coral（需自行安装驱动）",
+            "label": "${install.coralM2Label}",
             "value": "\n      - /dev/apex_0:/dev/apex_0\n"
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "Coral 为一个边缘计算加速模块，有USB和M.2两个版本。其中M.2版本性价比最高，但需要额外安装驱动。<br>注：一般情况下不需要该加速模块，即使是Intel核显，也能够很好的完成编解码加速与AI识别。"
+        "helpText": "${install.coralHelpText}"
       }
     ]
   },
   {
-    "stepTitle": "功能配置",
+    "stepTitle": "${install.featureStepTitle}",
     "items": [
       {
         "type": "select",
         "field": "wizard_endpoint",
-        "label": "开启 Huggingface 模型国内下载加速",
+        "label": "${install.hfMirrorLabel}",
         "initValue": "https://huggingface.mirror.frigate-cn.video",
         "options": [
           {
-            "label": "是",
+            "label": "${install.hfMirrorYesLabel}",
             "value": "https://huggingface.mirror.frigate-cn.video"
           },
           {
-            "label": "否",
+            "label": "${install.hfMirrorNoLabel}",
             "value": " "
           }
         ]
@@ -102,113 +102,117 @@
       {
         "type": "select",
         "field": "wizard_github_endpoint",
-        "label": "开启 Github 模型国内下载加速",
+        "label": "${install.githubMirrorLabel}",
         "initValue": "https://github.mirror.frigate-cn.video",
         "options": [
           {
-            "label": "是",
+            "label": "${install.githubMirrorYesLabel}",
             "value": "https://github.mirror.frigate-cn.video"
           },
           {
-            "label": "否",
+            "label": "${install.githubMirrorNoLabel}",
             "value": " "
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "将使用 <strong>Frigate 中文文档</strong> 与 <a href='https://cnb.cool' target=\"_blank\">cnb.cool</a> 提供的镜像加速内置的模型下载"
+        "helpText": "${install.mirrorHelpText}"
       },
       {
         "type": "text",
         "field": "wizard_shm_size",
-        "label": "共享内存大小（shm）",
+        "label": "${install.shmSizeLabel}",
         "initValue": "512mb",
         "rules": [
           {
             "required": true,
-            "message": "请输入共享内存大小，注意带单位，如mb"
+            "message": "${install.shmSizeRequiredMessage}"
+          },
+          {
+            "pattern": "^[0-9]+(\\.[0-9]+)?([kKmMgG][bB]?)?$",
+            "message": "${install.shmSizePatternMessage}"
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "Frigate 使用共享内存(shm)处理视频帧。如果该内存设置过小，将在使用多个高清摄像头的时候出现\"Bus error\"报错。更多详细信息请<a href=\"https://docs.frigate-cn.video/frigate/installation#calculating-required-shm-size\" target=\"_blank\">点击参阅文档</a>"
+        "helpText": "${install.shmSizeHelpText}"
       }
     ]
   },
   {
-    "stepTitle": "网络与认证配置",
+    "stepTitle": "${install.networkStepTitle}",
     "items": [
       {
         "type": "select",
         "field": "wizard_network_suffix",
-        "label": "网络模式",
+        "label": "${install.networkModeLabel}",
         "initValue": "-bridge",
         "options": [
           {
-            "label": "端口模式（默认）",
+            "label": "${install.networkBridgeLabel}",
             "value": "-bridge"
           },
           {
-            "label": "Host 模式",
+            "label": "${install.networkHostLabel}",
             "value": "-host"
           }
         ],
         "rules": [
           {
             "required": false,
-            "message": "请选择网络模式"
+            "message": "${install.networkModeRequiredMessage}"
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "<strong>端口模式</strong>：容器使用 Docker 桥接网络，通过端口映射对外暴露服务。<br><strong>Host 模式</strong>：容器直接共享宿主机网络，性能更好但所有容器端口直接暴露到宿主机。<br>如果你需要使用小米摄像头，或者 Apple Homekit ，请选择<strong>Host 模式</strong>，否则会出现无法找到摄像头的问题。"
+        "helpText": "${install.networkHelpText}"
       },
       {
         "type": "select",
         "field": "wizard_auth",
-        "label": "认证方式",
+        "label": "${install.authLabel}",
         "initValue": "gateway",
         "options": [
           {
-            "label": "飞牛统一网关（推荐）",
+            "label": "${install.authGatewayLabel}",
             "value": "gateway"
           },
           {
-            "label": "Frigate 自带认证",
+            "label": "${install.authNativeLabel}",
             "value": "native"
           }
         ],
         "rules": [
           {
             "required": false,
-            "message": "请选择认证方式"
+            "message": "${install.authRequiredMessage}"
           }
         ]
       },
       {
         "type": "tips",
-        "helpText": "<strong>飞牛统一网关</strong>：使用飞牛账号体系登录，无需额外记忆密码。<br><strong>Frigate 自带认证</strong>：通过 HTTPS 端口直接访问，使用 Frigate 独立的用户名密码登录。如需外部访问需自行配置端口转发。"
+        "helpText": "${install.authHelpText}"
       }
     ]
   },
   {
-    "stepTitle": "最后的重要提醒",
+    "stepTitle": "${install.finalStepTitle}",
     "items": [
       {
         "type": "tips",
-        "helpText": "<h1>警告！</h1><br>注意，如果你选择的是使用 Frigate 自带的认证，首次创建时，密码将输出在 Docker 的日志文件中，请安装完成后立刻打开 Docker 应用，在Frigate容器的日志中寻找密码。<br>更多找回密码的方法请<a href=\"https://docs.frigate-cn.video/configuration/authentication#resetting-admin-password\" target=\"_blank\">参阅文档"
+        "helpText": "${install.warningHelpText}"
       },
       {
         "type": "switch",
         "field": "wizard_agree_terms",
-        "label": "我已了解该问题",
+        "label": "${install.agreeLabel}",
         "rules": [
           {
             "required": true,
-            "message": "请阅读以上警告信息，否则无法正常使用"
+            "message": "${install.agreeRequiredMessage}"
           }
         ]
       }
